@@ -44,6 +44,7 @@ This part of the documentation takes you through Tailor and shows you how to use
 .. toctree::
     :maxdepth: 2
     
+    user/introduction
     user/install
 
 
