@@ -50,13 +50,13 @@ class Debian(object):
         for path in pathlist:
             put(path, dst+"%s"%os.path.basename(path))
     	
-	def setup_build(self):
+    def setup_build(self):
         """this method sets up a remote debian box for parcel package building.
         Installs fpm, easyinstall and some libraries
-        
+
         there must be a a directory called archives
         and in it a file rubygems-1.8.24.tgz
-        
+
         TODO: remove this requirement. get the file we need.
         """
         with settings(user='root'):
