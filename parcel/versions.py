@@ -15,9 +15,12 @@ class Version:
         # get the last chunk of numbers from the version string
         numbers = ''.join([c if c in '0123456789' else '-' for c in self.version]).split('-')[-1]
 
+        # truncate string before 'numbers' changes number of digits
+        prestring = self.version[:-len(numbers)]
+
         # the increment
         numbers = str( int(numbers)+1 )
 		
         #the new version
-        return Version(self.version[:-len(numbers)]+numbers)
+        return Version(presting+numbers)
 
