@@ -35,11 +35,16 @@ Deployment Style
 
 - uwsgi
 
-Contents:
+
+User Guide
+----------
+
+This part of the documentation takes you through Tailor and shows you how to use it to deploy your projects.
 
 .. toctree::
-   :maxdepth: 2
-
+    :maxdepth: 2
+    
+    user/install
 
 
 Indices and tables
