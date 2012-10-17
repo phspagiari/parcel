@@ -3,7 +3,7 @@
 Installation
 ============
 
-This document covers the installation of Tailor.
+This document covers the installation of Parcel.
 
     
 Get the Source
