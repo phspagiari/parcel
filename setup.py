@@ -3,7 +3,7 @@
 import os
 import sys
 
-import tailor
+import parcel
 
 try:
     from setuptools import setup
@@ -14,12 +14,12 @@ if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
 
-packages = [ 'tailor' ]
+packages = [ 'parcel' ]
 requires = [ 'fabric>=1.4.3']
 
 setup(
-    name='tailor',
-    version=tailor.__version__,
+    name='parcel',
+    version=parcel.__version__,
     description='Python Webapp Deployment Made Easier.',
     long_description="""Classes to help writing fabric files for python app deployment""",
     author='Crispin Wellington',
