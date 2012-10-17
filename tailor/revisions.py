@@ -59,6 +59,6 @@ def repo(path):
     content = os.listdir(path)
     if '.hg' in content:
         return Hg(path)
-    if '.git' in content
+    if '.git' in content:
         return Git(path)
     return repo(os.path.realpath(path+'/..'))			# recurse back a directory
