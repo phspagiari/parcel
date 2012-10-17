@@ -19,7 +19,7 @@ requires = []
 
 setup(
     name='tailor',
-    version=requests.__version__,
+    version=tailor.__version__,
     description='Python Webapp Deployment Made Easier.',
     long_description="""Classes to help writing fabric files for python app deployment""",
     author='Crispin Wellington',
