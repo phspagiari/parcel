@@ -15,7 +15,7 @@ if sys.argv[-1] == 'publish':
     sys.exit()
 
 packages = [ 'tailor' ]
-requires = []
+requires = [ 'fabric>=1.4.3']
 
 setup(
     name='tailor',
