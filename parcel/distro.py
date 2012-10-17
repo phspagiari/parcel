@@ -28,6 +28,10 @@ class Debian(object):
         build_dir = self.mkdir(self.space+"/build")
         return base_dir, src_dir, build_dir
         
+    @property
+    def build_base(self):
+        return '/tmp/'
+        
     def mkdir(self, remote):
         return run('mkdir "%s" && cd "%s" && pwd'%(url,url))
 

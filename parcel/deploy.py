@@ -3,28 +3,31 @@ import os.path
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
 from fabric.contrib.files import sed
 
+from . import distro
+
 class Deployment(object):
-    def __init__(self, app_name, build_deps=[], run_deps=[]):
-        with settings(user='root'):
-            run('apt-get update -qq')
-            if build_deps:
-                run('apt-get install -qq %s'%(' '.join(build_deps)))
-            v = run(
-                'apt-cache 2>/dev/null show %s | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%(app_name)
-            )
-            self.version = Version(v)
+    def __init__(self, app_name, build_deps=[], run_deps=[], arch=distro.Debian()):
+        # update and install missing build dependency packages
+        arch.update_packages()
+        if build_deps:
+            arch.build_deps(build_deps)
+            
+        # the version in the archives of this package if we have been built and uploaded before. Add one to it.
+        # TODO: what if its None?
+        self.version = arch.version(app_name).next()
 
         self.app_name = app_name
         self.run_deps = run_deps
         self.build_deps = build_deps
-        self.pkg_name = ('ca-' + app_name).lower()
+        self.pkg_name = app_name.lower()
 
 	    # the path we build everything on on the remote host
-        self.base_path = '/ca/buildbot/build/%s-%s'%(
+        self.base_path = arch.build_base+'/%s-%s'%(             # '/ca/buildbot/build/%s-%s'
             self.pkg_name,
             self.version
         )
-        self.app_path = os.path.join(self.base_path, 'ca', app_name)
+        self.app_path = os.path.join(self.base_path, app_name)
+        
         #self.current_branch = local('git symbolic-ref HEAD', capture=True)[11:]
 
     @with_settings(user='buildbot')
