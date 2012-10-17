@@ -3,7 +3,7 @@ import os.path
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
 from fabric.contrib.files import sed
 
-import .versions
+from . import versions
 
 #
 # Used to represent the remote build distribution
