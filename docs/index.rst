@@ -3,8 +3,37 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to tailor's documentation!
-==================================
+****   
+Logo
+****
+
+Tailor: Pragmatic Python Webapp Deployment
+==========================================
+
+Tailor v\ |version|. (:ref:`Installation <install>`)
+
+Tailor is a suite of classes designed to be used within `Fabric <http://docs.fabfile.org/en/1.4.3/>`_ for building and deploying
+Python web applications. 
+
+Feature Support
+---------------
+
+Presently tailor only supports the following: 
+
+Source Tree
+^^^^^^^^^^^
+
+- mercurial repositories
+
+Deploy Architecture
+^^^^^^^^^^^^^^^^^^^
+
+- debian targets
+
+Deployment Style
+^^^^^^^^^^^^^^^^
+
+- uwsgi
 
 Contents:
 
