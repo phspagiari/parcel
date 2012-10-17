@@ -18,7 +18,7 @@ packages = [ 'tailor' ]
 requires = []
 
 setup(
-    name='requests',
+    name='tailor',
     version=requests.__version__,
     description='Python Webapp Deployment Made Easier.',
     long_description="""Classes to help writing fabric files for python app deployment"""
