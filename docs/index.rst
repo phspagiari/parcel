@@ -7,18 +7,18 @@
 Logo
 ****
 
-Tailor: Pragmatic Python Webapp Deployment
+Parcel: Pragmatic Python Webapp Deployment
 ==========================================
 
-Tailor v\ |version|. (:ref:`Installation <install>`)
+Parcel v\ |version|. (:ref:`Installation <install>`)
 
-Tailor is a suite of classes designed to be used within `Fabric <http://docs.fabfile.org/en/1.4.3/>`_ for building and deploying
+Parcel is a suite of classes designed to be used within `Fabric <http://docs.fabfile.org/en/1.4.3/>`_ for building and deploying
 Python web applications. 
 
 Feature Support
 ---------------
 
-Presently tailor only supports the following: 
+Presently Parcel only supports the following: 
 
 Source Tree
 ^^^^^^^^^^^
@@ -39,7 +39,7 @@ Deployment Style
 User Guide
 ----------
 
-This part of the documentation takes you through Tailor and shows you how to use it to deploy your projects.
+This part of the documentation takes you through Parcels and shows you how to use it to deploy your projects.
 
 .. toctree::
     :maxdepth: 2

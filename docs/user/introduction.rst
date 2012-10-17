@@ -9,7 +9,7 @@ Concepts
 Build Host
 ^^^^^^^^^^
 
-Tailor uses the concept of a *build host* (or hosts) to simplify build procedures. The premise is thus: for each platform you 
+Parcel uses the concept of a *build host* (or hosts) to simplify build procedures. The premise is thus: for each platform you 
 want to target for deployment, you have a build host of the same architecture with the same software on it. Fabric connects to 
 these machines and issues the build commands. This way the binary package created will be tailored to the final hardware.
 
@@ -28,7 +28,7 @@ the project for two different platforms::
 Localhost as Hub
 ^^^^^^^^^^^^^^^^
 
-Tailor complies to the idea of everything being pushed and pulled from your local machine, the machine in which you have checked
+Parcel complies to the idea of everything being pushed and pulled from your local machine, the machine in which you have checked
 out your source code in and are issuing the `fab` commands from. Everything is pulled to here, and pushed from here. So for instance,
 after a .deb is built, it is pulled back to the localhost. When the build host needs a new version of code, the commands are issued
 from the local machine, the tree is checked out and updated, and then copied across to the build machine. It is not checked out to
@@ -42,7 +42,7 @@ binary. Rather that builds being performed using eggs, or packages, all the sour
 This ensures complete compatability with the deployment archetecture and system arangement. Once this full source build is done,
 the resultant compiled files are packaged into a binary package.
 
-Tailor License
+Parcel License
 --------------
 
     .. include:: ../../LICENSE
