@@ -3,6 +3,8 @@ import os.path
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
 from fabric.contrib.files import sed
 
+from . import versions
+
 class Deployment(object):
     def __init__(self, app_name, build_deps=[], run_deps=[]):
         with settings(user='root'):
@@ -12,7 +14,7 @@ class Deployment(object):
             v = run(
                 'apt-cache 2>/dev/null show %s | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%(app_name)
             )
-            self.version = Version(v)
+            self.version = versions.Version(v)
 
         self.app_name = app_name
         self.run_deps = run_deps
