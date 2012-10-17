@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # parcel documentation build configuration file, created by
-# sphinx-quickstart on Wed Oct 17 11:34:07 2012.
+# sphinx-quickstart on Wed Oct 17 19:38:23 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -26,7 +26,7 @@ sys.path.append(os.path.abspath('_themes'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -98,8 +98,7 @@ html_theme = 'flask'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'index_logo':'sewing.gif',
-    'index_logo_height':'120px'
+    'index_logo':'sewing.gif'
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -187,7 +186,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'parcel.tex', u'Parcel Documentation',
+  ('index', 'parcel.tex', u'parcel Documentation',
    u'Crispin Wellington', 'manual'),
 ]
 
@@ -217,7 +216,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'parcel', u'Parcel Documentation',
+    ('index', 'parcel', u'parcel Documentation',
      [u'Crispin Wellington'], 1)
 ]
 
@@ -231,7 +230,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'parcel', u'Parcel Documentation',
+  ('index', 'parcel', u'parcel Documentation',
    u'Crispin Wellington', 'parcel', 'One line description of project.',
    'Miscellaneous'),
 ]
