@@ -9,7 +9,7 @@ This document covers the installation of Parcel.
 Get the Source
 --------------
 
-Parcel is available on BitBucket.
+Parcel is available on the `BitBucket project page <https://bitbucket.org/retrogradeorbit/parcel>`_.
 
 Clone the public repository::
 
