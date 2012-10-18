@@ -44,7 +44,15 @@ class Debian(object):
             run("apt-get install -qq %s"%(' '.join(deps)))
 
     def version(self,package):
-        return versions.Version(run('apt-cache 2>/dev/null show %s | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%(package)))
+        """Look at the debian apt package system for a package with this name and return its version.
+        Return None if there is no such package.
+        """
+        with settings(warn_only=True):
+            vstring = run('apt-cache show %s 2>/dev/null | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%(package))
+            if vstring.return_code:
+                # error fetching package info. Assume there is no such named package. Return None
+                return None
+            return versions.Version(vstring)
 	
     def push_files(self,pathlist,dst):
         for path in pathlist:

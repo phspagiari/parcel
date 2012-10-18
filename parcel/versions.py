@@ -22,5 +22,5 @@ class Version:
         numbers = str( int(numbers)+1 )
 		
         #the new version
-        return Version(presting+numbers)
+        return Version(prestring+numbers)
 
