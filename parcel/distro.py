@@ -15,7 +15,7 @@ class Debian(object):
     def __init__(self):
         pass
 
-    def _cleanup():
+    def _cleanup(self):
         run("rm -rf '%s'"%self.space)  
 
     def _setup(self):
@@ -33,7 +33,7 @@ class Debian(object):
         return '/tmp/'
         
     def mkdir(self, remote):
-        return run('mkdir "%s" && cd "%s" && pwd'%(url,url))
+        return run('mkdir "%s" && cd "%s" && pwd'%(remote,remote))
 
     def update_packages(self):
         with settings(user='root'):
@@ -58,7 +58,7 @@ class Debian(object):
         for path in pathlist:
             put(path, dst+"%s"%os.path.basename(path))
     	
-    def setup_build(self):
+    def setup(self):
         """this method sets up a remote debian box for parcel package building.
         Installs fpm, easyinstall and some libraries
 
@@ -70,7 +70,7 @@ class Debian(object):
         with settings(user='root'):
             self.build_deps(['libyaml-ruby','libzlib-ruby','ruby','ruby-dev','checkinstall'])
 
-            base_dir, src_dir, build_dir = self._setup_build_dirs()
+            base_dir, src_dir, build_dir = self._setup()
             self.push_files(["archives/rubygems-1.8.24.tgz"],src_dir)                   # todo: get rubygems if its not present.
             with cd(build_dir):
                 run("tar xvfz ../src/rubygems-1.8.24.tgz")

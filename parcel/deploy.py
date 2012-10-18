@@ -7,6 +7,8 @@ from . import versions
 from . import distro
 
 class Deployment(object):
+    virtual = "vp"
+
     def __init__(self, app_name, build_deps=[], run_deps=[], arch=distro.Debian()):
         # update and install missing build dependency packages
         arch.update_packages()
@@ -15,55 +17,56 @@ class Deployment(object):
             
         # the version in the archives of this package if we have been built and uploaded before. Add one to it.
         # TODO: what if its None?
-        self.version = arch.version(app_name).next()
-
+        self.version = arch.version(app_name)
+        
         self.app_name = app_name
         self.run_deps = run_deps
         self.build_deps = build_deps
         self.pkg_name = app_name.lower()
 
 	    # the path we build everything on on the remote host
-        self.base_path = arch.build_base+'/%s-%s'%(             # '/ca/buildbot/build/%s-%s'
+        self.base_path = arch.build_base+'%s-%s'%(             # '/ca/buildbot/build/%s-%s'
             self.pkg_name,
             self.version
         )
+        print "BP",self.base_path
         self.app_path = os.path.join(self.base_path, app_name)
         
         #self.current_branch = local('git symbolic-ref HEAD', capture=True)[11:]
 
-    @with_settings(user='buildbot')
-    def prepare_app(self, branch=None):
+    #@with_settings(user='buildbot')
+    def prepare_app(self, branch=None, requirements=None):
         """creates the necessary directories on the build server, checks out the desired branch (None means current),
         creates a virtualenv and populates it with dependencies from requirements.txt. 
         As a bonus it also fixes the shebangs ("#!") of all scripts in the virtualenv to point the correct Python path on the target system."""
-        run('rm -rf ~/build/ca-%s*'%(self.app_name))
         self.src_path = os.path.join(self.app_path, self.app_name)
-        if not branch:
-	        self.git_branch = local('git symbolic-ref HEAD', capture=True)[11:]
-        else:
-	        self.git_branch = branch
-        local('git push origin ' + self.git_branch)
-        git_clone(self.app_name, self.git_branch, self.src_path)
-        with cd(self.src_path):
-	        self.git_commit = run('git rev-parse --short HEAD')
+        #if not branch:
+	    #    self.git_branch = local('git symbolic-ref HEAD', capture=True)[11:]
+        #else:
+	    #    self.git_branch = branch
+        #local('git push origin ' + self.git_branch)
+        #git_clone(self.app_name, self.git_branch, self.src_path)
+        #with cd(self.src_path):
+	    #    self.git_commit = run('git rev-parse --short HEAD')
 
-        self.venv_path = os.path.join(self.app_path, 'venv')
+        self.venv_path = os.path.join(self.app_path, self.virtual)
         run('virtualenv %s'%(self.venv_path))
-        run('%s install -r %s'%(
-	        os.path.join(self.venv_path, 'bin/pip'),
-	        os.path.join(self.src_path, 'requirements.txt'))
-        )
+        if requirements:
+            run('%s install -r %s'%(
+	            os.path.join(self.venv_path, 'bin/pip'),
+	            os.path.join(self.src_path, requirements))
+            )
         # fix shebangs
-        target_venv_bin = os.path.join('/ca', self.app_name, 'venv/bin')
-        with cd(os.path.join(self.venv_path, 'bin')):
-            for script in run('ls').split():
-                sed(
-                    script,
-                    '#!' + os.path.join(self.venv_path, 'bin/(.+)'),
-                    '#!' + os.path.join(target_venv_bin, r'\1')
-                )
+        #target_venv_bin = os.path.join('/ca', self.app_name, 'venv/bin')
+        #with cd(os.path.join(self.venv_path, 'bin')):
+        #    for script in run('ls').split():
+        #        sed(
+        #            script,
+        #            '#!' + os.path.join(self.venv_path, 'bin/(.+)'),
+        #            '#!' + os.path.join(target_venv_bin, r'\1')
+        #        )
 
-    @with_settings(user='buildbot')
+    #@with_settings(user='buildbot')
     def build_deb(self, dirs=['ca']):
         """takes the whole app including the virtualenv, packages it using fpm and downloads it to my local host.
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
