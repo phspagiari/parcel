@@ -14,32 +14,12 @@ First, make sure that:
 * Parcel is :ref:`installed <install>`
 * Parcel is :ref:`up-to-date <updates>`
 
+Secondly, make sure you have a build host setup that you can use to build some packages.
+You could setup a :ref:`Debian machine to be a build host <buildhost>` for this quickstart.
 
-Let's get started with some simple examples.
-
-Making a Build Host
--------------------
-
-Download and install vagrant to help you build some vitual machines. Lets start by asking vagrant to boot up an ubuntu image::
-
-    $ vagrant box add base http://files.vagrantup.com/lucid32.box
-    $ vagrant init
-    $ vagrant up
-    
-.. tip::
-    If you are running an ssh-agent, add the vagrant key to your chain with::
-    
-    $ ssh-add ~/.vagrant.d/insecure_private_key
-    
-    Then you can shell in with::
-    
-    $ ssh -p 2222 vagrant@localhost
-    
-.. note::
-
-    It may look like you can just ssh into your new box but it is not actually network 
-    visible from the host. But port 2222 on localhost is forwarded to port 22 (ssh) on
-    the guest VM.
+From here we assume that you build host is a debian machine available with the name
+`debian.localdomain`. Replace that name where it occurs below with your debian machines hostname
+or ip address. Let's get started with some simple examples.
 
 Making a Package
 ------------------
@@ -59,6 +39,6 @@ Now, lets create a deb target for our project::
         
 Now save the fabfile and at the commandline issue::
 
-    $ fab -H localhost --port=2222 deb
+    $ fab -H debian.localdomain deb
     
 

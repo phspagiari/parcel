@@ -47,6 +47,7 @@ This part of the documentation takes you through Parcels and shows you how to us
     user/introduction
     user/install
     user/quickstart
+    user/buildhost
 
 
 Indices and tables
