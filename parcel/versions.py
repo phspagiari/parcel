@@ -23,7 +23,6 @@ class Version:
             # split string on rightmost digit and rejoin with rmd+1
             new_version = str(rmd+1).join(self.version.rsplit(str(rmd),1))
         else:
-            print "here"
             new_version = self.version + "1"
 
         assert LooseVersion(new_version) > LooseVersion(self.version)
