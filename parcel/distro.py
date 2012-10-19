@@ -88,7 +88,7 @@ class Debian(object):
             
             # get rubygems and copy it across
             path = cache.get("http://production.cf.rubygems.org/rubygems/rubygems-1.8.24.tgz")
-            self.push_files([path],base_dir+"/src")
+            self.push_files([path],src_dir)
             filename = os.path.basename(path)
             
             with cd(build_dir):
