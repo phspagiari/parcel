@@ -31,11 +31,9 @@ class Version:
 
     def right_most_digits(self, version):
 
-        rmd = None
         v = LooseVersion(version)
         for x in reversed(v.version):
             if isinstance(x, int):
-                rmd = x
-                break
-        return rmd
+                return x
         
+        return None        
