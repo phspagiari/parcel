@@ -58,6 +58,19 @@ class Debian(object):
         for path in pathlist:
             put(path, dst+"%s"%os.path.basename(path))
     	
+    def check(self):
+        """Check the remote build host to see if the relevant software to build packages is installed"""
+        with settings(warn_only=True):
+            # check for fpm
+            result = run('which fpm')
+            if result.return_code:
+                raise Exception("Build host does not have fpm installed and on the executable path")
+            
+            # check for checkinstall
+            result = run('which checkinstall')
+            if result.return_code:
+                raise Exception("Build host does not have checkinstall installed and on the executable path")
+        
     def setup(self):
         """this method sets up a remote debian box for parcel package building.
         Installs fpm, easyinstall and some libraries

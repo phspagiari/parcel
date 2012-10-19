@@ -15,8 +15,7 @@ class Deployment(object):
         if build_deps:
             arch.build_deps(build_deps)
             
-        # the version in the archives of this package if we have been built and uploaded before. Add one to it.
-        # TODO: what if its None?
+        # the version in the archives of this package if we have been built and uploaded before.
         self.version = arch.version(app_name)
         
         self.app_name = app_name
@@ -29,7 +28,6 @@ class Deployment(object):
             self.pkg_name,
             self.version
         )
-        print "BP",self.base_path
         self.app_path = os.path.join(self.base_path, app_name)
         
         #self.current_branch = local('git symbolic-ref HEAD', capture=True)[11:]
