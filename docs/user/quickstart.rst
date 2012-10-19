@@ -26,11 +26,9 @@ Making a Package
 
 Making a package is very simple. Begin by going to the base directory of your project and making a file `fabfile.py`.
 
-Then in that file, import the parcel.deploy.Deployment object::
+Then in that file write the following::
 
     from parcel.deploy import Deployment
-
-Now, lets create a deb target for our project::
 
     def deb():
         deploy = Deployment("myapp")
