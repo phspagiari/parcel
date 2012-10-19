@@ -2,6 +2,8 @@
 
 import requests
 
+BLOCK_SIZE = 8192
+
 def dl(url,filename):
     """download a url from the net and saves it as filename.
     
@@ -11,8 +13,6 @@ def dl(url,filename):
     assert r.status_code==200
     
     with open(filename,'wb') as fh:
-        for data in r.iter_content(8192):
+        for data in r.iter_content(BLOCK_SIZE):
             fh.write(data)
-        
-    
-    
+

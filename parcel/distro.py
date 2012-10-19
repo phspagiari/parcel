@@ -4,6 +4,7 @@ from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settin
 from fabric.contrib.files import sed
 
 from . import versions
+from .cache import cache
 
 #
 # Used to represent the remote build distribution
@@ -56,7 +57,7 @@ class Debian(object):
 	
     def push_files(self,pathlist,dst):
         for path in pathlist:
-            put(path, dst+"%s"%os.path.basename(path))
+            put(path, os.path.join(dst,os.path.basename(path)))
     	
     def check(self):
         """Check the remote build host to see if the relevant software to build packages is installed"""
@@ -84,9 +85,14 @@ class Debian(object):
             self.build_deps(['libyaml-ruby','libzlib-ruby','ruby','ruby-dev','checkinstall'])
 
             base_dir, src_dir, build_dir = self._setup()
-            self.push_files(["archives/rubygems-1.8.24.tgz"],src_dir)                   # todo: get rubygems if its not present.
+            
+            # get rubygems and copy it across
+            path = cache.get("http://production.cf.rubygems.org/rubygems/rubygems-1.8.24.tgz")
+            self.push_files([path],base_dir+"/src")
+            filename = os.path.basename(path)
+            
             with cd(build_dir):
-                run("tar xvfz ../src/rubygems-1.8.24.tgz")
+                run("tar xvfz ../src/%s"%filename)
             with cd(build_dir+"/rubygems-1.8.24"):
                 run("ruby setup.rb")
             run("gem1.8 install fpm")
