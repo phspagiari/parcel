@@ -1,5 +1,5 @@
-import requests
 import os
+from parcel.tools import dl
 
 class FileCache(object):
     cache_dir="/tmp/parcel-cache"
@@ -18,8 +18,6 @@ class FileCache(object):
         
     def download(self,url):
         filename=url.rsplit('/',1)[-1]
-        
-        from parcel.tools import dl
         dl(url,os.path.join(self.cache_dir,filename))
         
     def is_cached(self,filename):
