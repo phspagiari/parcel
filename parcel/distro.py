@@ -11,6 +11,7 @@ from .cache import cache
 
 class Debian(object):
     space = '.parcel-build-temp'
+    pip_download_cache = '/tmp/pip-download-cache/'
 
     def __init__(self):
         pass
