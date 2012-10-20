@@ -14,10 +14,10 @@ def crc32(filename):
     CHUNKSIZE = 8192
     checksum = 0
     with open(filename, 'rb') as fh:
-        bytes = fh.read(CHUNKSIZE)
-        while bytes:
-            checksum = zlib.crc32(bytes, checksum)
-            bytes = fh.read(CHUNKSIZE)
+        data = fh.read(CHUNKSIZE)
+        while data:
+            checksum = zlib.crc32(data, checksum)
+            data = fh.read(CHUNKSIZE)
     return checksum
 
 
