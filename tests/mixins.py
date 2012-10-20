@@ -2,6 +2,7 @@ import sys, os
 import threading
 import SimpleHTTPServer
 import SocketServer
+import socket
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
@@ -11,16 +12,22 @@ class WebServerMixin(object):
     def startWebServer(self,port=8000):
         self.host = 'localhost'
 
-        try:
-            self.server = ThreadedTCPServer((self.host, port), SimpleHTTPServer.SimpleHTTPRequestHandler)
-        except Exception, e:
-            print e
-            raise
+        self.server = None
+        while self.server is None:
+            try:
+                self.server = ThreadedTCPServer((self.host, port), SimpleHTTPServer.SimpleHTTPRequestHandler)
+            except socket.error, e:
+                if e.errno==48:
+                    port += 1               # address in use. Increase the port
+                else:
+                    raise e
         self.ip, self.port = self.server.server_address
+        
+        self.webroot = os.path.join(os.path.dirname(__file__),"data")           # serve out the data directory
         
         # Start a thread with the server
         def sthread():
-            os.chdir(os.path.join(os.path.dirname(__file__),"data"))                 # serve out the data directory
+            os.chdir(self.webroot)                 
             self.server.serve_forever()
             
         self.server_thread = threading.Thread(target=sthread)
