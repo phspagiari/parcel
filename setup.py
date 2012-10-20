@@ -15,7 +15,7 @@ if sys.argv[-1] == 'publish':
     sys.exit()
 
 packages = [ 'parcel' ]
-requires = [ 'fabric>=1.4.3']
+requires = [ 'fabric>=1.4.3', 'requests']
 
 setup(
     name='parcel',
