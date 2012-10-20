@@ -12,3 +12,8 @@ def deb_ls(deb):
     with cd(build_dir):
         run("dpkg --contents '%s'"%deb)
                 
+def deb_install(deb):
+    base_dir, src_dir, build_dir = Debian()._setup()
+    put(deb,build_dir+"/"+deb)
+    with cd(build_dir):
+        run("dpkg --install '%s'"%deb)
