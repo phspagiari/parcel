@@ -3,7 +3,7 @@ init:
 	pip install -r requirements.txt
 
 test:
-	nosetests -v ./tests/*
+	nosetests -v ./tests/*.py
 
 docs:
 	cd docs; make dirhtml
