@@ -3,7 +3,7 @@ from fabric.api import run
 import tempfile
 
 from mixins import WebServerMixin
-from parcel.tools import dl, rpull, rpush
+from parcel.tools import dl
 
 def tempname():
     return tempfile.mkstemp()[1]
