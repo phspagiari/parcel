@@ -1,0 +1,6 @@
+# the parcel requirements
+-r requirements.txt
+
+# stuff for testing
+mock
+nose

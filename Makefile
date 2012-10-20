@@ -3,13 +3,7 @@ init:
 	pip install -r requirements.txt
 
 test:
-	nosetests ./tests/*
-
-lazy:
-	nosetests --with-color tests/test_requests.py
-
-simple:
-	nosetests tests/test_requests.py
+	nosetests -v ./tests/*
 
 docs:
 	cd docs; make dirhtml
