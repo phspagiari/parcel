@@ -29,6 +29,7 @@ Making a package is very simple. Begin by going to the base directory of your pr
 Then in that file write the following::
 
     from parcel.deploy import Deployment
+    from parcel.probes import *
 
     def deb():
         deploy = Deployment("myapp")
@@ -38,5 +39,15 @@ Then in that file write the following::
 Now save the fabfile and at the commandline issue::
 
     $ fab -H debian.localdomain deb
+    
+When the build is finished you should have a file `myapp_0.0.0_all.deb`. If you want to see what's been put in the package,
+use the deb_ls target::
+
+    $ fab -H debian.localdomain deb_ls:myapp_0.0.0_all.deb
+    
+You will see that the package consists of all the files in your source directory. This is the simplest form of packaging.
+This is not that useful as it is only the files. But from here your fabfile can expand to implement some deployment scenarios.
+
+
     
 
