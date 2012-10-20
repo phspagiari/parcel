@@ -31,9 +31,10 @@ class ToolsTestSuite(unittest.TestCase, WebServerMixin):
         
         dl("http://localhost:%s/tip.tar.gz"%self.port,filename)
         
-        # there should be no differences between the files
-        self.assertEquals(crc32(filename),crc32(os.path.join(self.webroot,'tip.tar.gz')))
-        
-        # shutdown webserver
-        self.stopWebServer()
+        try:
+            # there should be no differences between the files
+            self.assertEquals(crc32(filename),crc32(os.path.join(self.webroot,'tip.tar.gz')))
+        finally:
+            # shutdown webserver
+            self.stopWebServer()
         
