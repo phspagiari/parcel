@@ -2,8 +2,10 @@ init:
 	python setup.py develop
 	pip install -r requirements.txt
 
+tests: test
+
 test:
-	nosetests -v ./tests/*.py
+	nosetests ./tests/*.py
 
 docs:
 	cd docs; make dirhtml
