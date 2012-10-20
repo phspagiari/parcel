@@ -1,7 +1,6 @@
 import os.path
 
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
-from fabric.contrib.files import sed
 
 from . import versions
 from . import distro
@@ -9,15 +8,25 @@ from . import distro
 class Deployment(object):
     virtual = "vp"
 
-    def __init__(self, app_name, build_deps=[], run_deps=[], path="./", base="/usr/local/webapps/",arch=distro.Debian()):
+    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian()):
         """app_name: the package name
         build_deps: a list of packages that need to be installed to build the software
         run_deps: a list of packages that must be installed to run
         path: the directory to end up being the base level directory.
+        base: where the path will be located on the build host. default is use homedir.
+                if path is relative, its relative to remote homedir
+                if path is absolute, its the path.
         arch: the architecture of the build host
         """
-        # update and install missing build dependency packages
         self.arch = arch
+        
+        # if path isn't set, make it the home directory of the build user
+        if base is None:
+            base = run('echo $HOME')
+        elif not base.startswith('/'):
+            base = os.path.join(run('echo $HOME'), base)
+        
+        # update and install missing build dependency packages
         arch.update_packages()
         if build_deps:
             arch.build_deps(build_deps)
@@ -33,14 +42,8 @@ class Deployment(object):
         self.path = os.path.realpath(path)
 
 	    # the path we build everything on on the remote host
-        self.base_path = base+'%s-%s'%(             # '/ca/buildbot/build/%s-%s'
-            self.pkg_name,
-            self.version
-        )
-        self.app_path = os.path.join(self.base_path, app_name)
+        self.app_path = os.path.join(base,'%s-%s'%(self.pkg_name,self.version))
         
-        #self.current_branch = local('git symbolic-ref HEAD', capture=True)[11:]
-
     def prepare_app(self, branch=None, requirements="requirements.txt"):
         """creates the necessary directories on the build server, checks out the desired branch (None means current),
         creates a virtualenv and populates it with dependencies from requirements.txt. 
@@ -72,7 +75,7 @@ class Deployment(object):
         """takes the whole app including the virtualenv, packages it using fpm and downloads it to my local host.
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
 	    """
-        with cd(self.base_path):
+        with cd(self.app_path):
             self.run_deps.append('python-virtualenv')                   
             deps_str = '-d ' + ' -d '.join(self.run_deps)
             dirs_str = self.app_path
