@@ -2,9 +2,6 @@ import unittest2 as unittest
 import sys, os
 
 from parcel.cache import FileCache
-
-from random import randint                         
-
 from mixins import WebServerMixin
 
 ##
@@ -61,15 +58,14 @@ class CacheTestSuite(unittest.TestCase, WebServerMixin):
         self.assertFalse(os.listdir(self.path))
         
     def test_get_tarball_url(self):
-        port = randint(1024,64000)                           # we randomise our server port as a shitty way of not needing to set SO_REUSEADDR
-        self.startWebServer(port)
+        self.startWebServer()
         
         # make cache
         self.path = mkdir()
         cache = FileCache(self.path)
         
         # get test tarball
-        path = cache.get("http://localhost:%d/tip.tar.gz"%port)
+        path = cache.get("http://localhost:%d/tip.tar.gz"%self.port)
         
         self.assertTrue('tip.tar.gz' in os.listdir(self.path))          # make sure file is in cache
         self.assertEquals(path, os.path.join(self.path,'tip.tar.gz'))   # make sure thats what was returned
