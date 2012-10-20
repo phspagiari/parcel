@@ -1,7 +1,6 @@
 import os.path
 
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
-from fabric.contrib.files import sed
 
 from . import versions
 from .cache import cache
