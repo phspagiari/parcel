@@ -1,4 +1,3 @@
-import mock
 import unittest2 as unittest
 from fabric.api import run
 

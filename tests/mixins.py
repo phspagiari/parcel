@@ -1,6 +1,4 @@
-import sys, os
-from random import randint                         
-import socket
+import sys, os                      
 import threading
 import SimpleHTTPServer
 import SocketServer
