@@ -1,0 +1,87 @@
+import mock
+import unittest2 as unittest
+from fabric.api import run
+
+import sys
+
+from parcel.distro import Debian
+
+class DistroTestSuite(unittest.TestCase):
+    """Versions test cases."""
+
+    def setUp(self):
+        self.saved_side_effect = run.side_effect
+        self.deb = Debian()
+        run.reset_mock()
+        
+    def tearDown(self):
+        self.deb = None
+        run.reset_mock()
+        
+        #restore default side_effect
+        run.side_effect = self.saved_side_effect
+
+    def test_update_packages(self):
+        self.deb.update_packages()
+        run.assert_called_once_with("apt-get update -qq")
+        
+    def test_cleanup(self):
+        self.deb._cleanup()
+        self.assertEqual(run.call_count,1)
+        self.assertTrue("rm -rf" in run.call_args[0][0])
+
+    def test_setup(self):
+        self.deb._setup()
+        commands = run.call_args_list                   # get the commands run remotely in order
+        
+        # clean command should top list
+        self.assertTrue("rm -rf" in commands[0][0][0])
+        
+        # the rest should be mkdirs.
+        for command in commands[1:]:
+            self.assertTrue(command[0][0].startswith('mkdir '))
+            
+            # the classes build space should be in the path
+            self.assertTrue(self.deb.space in command[0][0])
+        
+    def test_check_fpm_not_present(self):
+        def called(command):
+            class retobj: pass
+            retval = retobj()
+            
+            if 'fpm' in command:
+                retval.return_code = 1
+            elif 'checkinstall' in command:
+                retval.return_code = 0
+        
+            return retval 
+            
+        run.side_effect = called              # return these two objects from two calls to run
+        self.assertRaises(Exception,self.deb.check,())                  # should be fpm exception
+        
+    def test_check_fpm_present_checkinstall_not(self):
+        def called(command):
+            class retobj: pass
+            retval = retobj()
+            
+            if 'fpm' in command:
+                retval.return_code = 0
+            elif 'checkinstall' in command:
+                retval.return_code = 1
+        
+            return retval 
+            
+        run.side_effect = called              # return these two objects from two calls to run
+        
+        self.assertRaises(Exception,self.deb.check,())                  # should be checkinstall exception
+        
+    def test_check_everything_present(self):
+        class retobj: pass
+        retval = retobj()
+        retval.return_code = 0
+            
+        run.return_value = retval              # return these two objects from two calls to run
+        
+        self.deb.check()
+        
+    
