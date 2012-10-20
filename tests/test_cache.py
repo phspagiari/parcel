@@ -5,6 +5,8 @@ from parcel.cache import FileCache
 
 from random import randint                         
 
+from mixins import WebServerMixin
+
 ##
 ## Some functions to help building and clearing a directory
 ##
@@ -16,25 +18,10 @@ def mkdir():
 def rmdir(path):
     shutil.rmtree(path)
 
-
-
-##
-## We need to test web download functionality, but web is too slow
-## Built in simple threaded server
-##
-import socket
-import threading
-import SimpleHTTPServer
-import SocketServer
-
-class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
-    pass
-
-
 ##
 ## Test Suite
 ##
-class CacheTestSuite(unittest.TestCase):
+class CacheTestSuite(unittest.TestCase, WebServerMixin):
     """Versions test cases."""
     def setUp(self):
         self.path = None                # use this in tests for a directory that will always be deleted
@@ -43,26 +30,6 @@ class CacheTestSuite(unittest.TestCase):
         if self.path:
             rmdir(self.path)
         self.path = None
-    
-    def startWebServer(self,port):
-        self.host = 'localhost'
-
-        self.server = ThreadedTCPServer((self.host, port), SimpleHTTPServer.SimpleHTTPRequestHandler)
-        self.ip, self.port = self.server.server_address
-        
-        # Start a thread with the server
-        def sthread():
-            os.chdir(os.path.join(os.path.dirname(__file__),"data"))                 # serve out the data directory
-            self.server.serve_forever()
-            
-        self.server_thread = threading.Thread(target=sthread)
-        
-        # Exit the server thread when the main thread terminates
-        self.server_thread.daemon = True
-        self.server_thread.start()
-
-    def stopWebServer(self):
-        self.server.shutdown()
         
     def test_new_cache_makes_directory(self):
         # make a path
