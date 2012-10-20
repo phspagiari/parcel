@@ -37,4 +37,7 @@ class ToolsTestSuite(unittest.TestCase, WebServerMixin):
         finally:
             # shutdown webserver
             self.stopWebServer()
+            
+            # clean up file
+            os.unlink(filename)
         

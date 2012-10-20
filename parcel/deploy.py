@@ -41,7 +41,6 @@ class Deployment(object):
         
         #self.current_branch = local('git symbolic-ref HEAD', capture=True)[11:]
 
-    #@with_settings(user='buildbot')
     def prepare_app(self, branch=None, requirements="requirements.txt"):
         """creates the necessary directories on the build server, checks out the desired branch (None means current),
         creates a virtualenv and populates it with dependencies from requirements.txt. 
@@ -60,14 +59,20 @@ class Deployment(object):
 	            os.path.join(self.venv_path, 'bin/pip'),
 	            os.path.join(self.app_path, requirements))
             )
+            
+    def compile_python(self):
+        # compile all python (with virtual python)
+        run('%s -c "import compileall;compileall.compile_dir(\'%s\', force=1)"'%(os.path.join(self.venv_path, 'bin/python'),self.app_path))
 
-    #@with_settings(user='buildbot')
+    def clear_py_files():
+        # clear all .py files
+        run('find "%s" -name "*.py" -exec rm {} \;'%(self.app_path))
+
     def build_deb(self):
         """takes the whole app including the virtualenv, packages it using fpm and downloads it to my local host.
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
 	    """
         with cd(self.base_path):
-            #run('mv "%s" .'%os.path.join(self.src_path, 'debian'))
             self.run_deps.append('python-virtualenv')                   
             deps_str = '-d ' + ' -d '.join(self.run_deps)
             dirs_str = self.app_path
@@ -91,4 +96,6 @@ class Deployment(object):
                 .format(self, hooks_str, deps_str, dirs_str)
             )
 
-            get(rv.split('"')[-2], './')	
+            filename = rv.split('"')[-2]
+            get(filename, './')
+            run("rm '%s'"%filename)
