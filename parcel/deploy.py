@@ -66,7 +66,7 @@ class Deployment(object):
         # theres no revision control atm so... just copy directory over
         tools.rsync([self.path+'/'],self.build_path,rsync_ignore='.rsync-ignore')
         
-        self.venv_path = os.path.join(self.app_path, self.virtual)
+        self.venv_path = os.path.join(self.build_path, self.virtual)
         run('virtualenv %s'%(self.venv_path))
         if requirements:
             run('PIP_DOWNLOAD_CACHE="%s" %s install -r %s'%(
@@ -124,7 +124,9 @@ APP_NAME={0.app_name}
 
 case "$1" in
     upgrade|failed-upgrade|abort-install|abort-upgrade|disappear|purge|remove)
-        supervisorctl stop $APP_NAME
+        kill `cat /var/pid/parcel-uwsgi.pid`
+        sleep 3
+        kill -9 `cat /var/pid/parcel-uwsgi.pid`
     ;;
 
     *)
@@ -145,7 +147,18 @@ APP_NAME={0.app_name}
 case "$1" in
     configure)
         virtualenv {0.venv_path}
-        supervisorctl start $APP_NAME
+        uwsgi   --chdir={0.app_path}                     \
+                --http=:8000                            \
+                --module={0.app_name}.wsgi                   \
+                --master --pidfile=/var/pid/parcel-uwsgi.pid \
+                --processes=5 \                 # number of worker processes
+                --uid=1000 --gid=2000 \         # if root, uwsgi can drop privileges
+                --harakiri=20 \                 # respawn processes taking more than 20 seconds
+                --limit-as=128 \                # limit the project to 128 MB
+                --max-requests=5000 \           # respawn processes after serving 5000 requests
+                --vacuum \                      # clear environment on exit
+                --home=/path/to/virtual/env \   # optional path to a virtualenv
+                --daemonize=/var/log/uwsgi/{0.app_name}.log      # background the process
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

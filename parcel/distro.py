@@ -19,9 +19,10 @@ class Distro(object):
     def _cleanup(self):
         run("rm -rf '%s'"%self.space)  
 
-    def _setup(self):
+    def _setup(self, clean=True):
         # first cleanup any broken stale previous builds
-        self._cleanup()
+        if clean:
+            self._cleanup()
 
         # make fresh directories
         base_dir = self.mkdir(self.space)
@@ -34,7 +35,7 @@ class Distro(object):
         return '/tmp/'
         
     def mkdir(self, remote):
-        return run('mkdir "%s" && cd "%s" && pwd'%(remote,remote))
+        return run('mkdir -p "%s" && cd "%s" && pwd'%(remote,remote))
 
     def update_packages(self):
         with settings(user='root'):
