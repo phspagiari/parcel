@@ -55,5 +55,5 @@ The variable `base` is a path on the remote host where the package will be insta
 is ommitted, the install path is the home directory of the building user. If it's an absolute path (starting with /) then
 it's installed in that path. If it's a relative path like this setting, it is installed into that path relative to the
 build users home directory. So in our case it will be "~/webapps". So, for instance, if we were to build the package as
-user apache on debian (pass `-u apache` into our fab call), then the package would be installed under /var/www/webapps.
+user apache (pass `-u apache` into our fab call), then the package on debian would be installed under /var/www/webapps.
 
