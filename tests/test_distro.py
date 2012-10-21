@@ -3,34 +3,32 @@ from fabric.api import run
 
 import sys
 
-from parcel.distro import Debian
+from parcel.distro import debian
 
 class DistroTestSuite(unittest.TestCase):
     """Versions test cases."""
 
     def setUp(self):
         self.saved_side_effect = run.side_effect
-        self.deb = Debian()
         run.reset_mock()
         
     def tearDown(self):
-        self.deb = None
         run.reset_mock()
         
         #restore default side_effect
         run.side_effect = self.saved_side_effect
 
     def test_update_packages(self):
-        self.deb.update_packages()
+        debian.update_packages()
         run.assert_called_once_with("apt-get update -qq")
         
     def test_cleanup(self):
-        self.deb._cleanup()
+        debian._cleanup()
         self.assertEqual(run.call_count,1)
         self.assertTrue("rm -rf" in run.call_args[0][0])
 
     def test_setup(self):
-        self.deb._setup()
+        debian._setup()
         commands = run.call_args_list                   # get the commands run remotely in order
         
         # clean command should top list
@@ -56,7 +54,7 @@ class DistroTestSuite(unittest.TestCase):
             return retval 
             
         run.side_effect = called              # return these two objects from two calls to run
-        self.assertRaises(Exception,self.deb.check,())                  # should be fpm exception
+        self.assertRaises(Exception,debian.check,())                  # should be fpm exception
         
     def test_check_fpm_present_checkinstall_not(self):
         def called(command):
@@ -72,7 +70,7 @@ class DistroTestSuite(unittest.TestCase):
             
         run.side_effect = called              # return these two objects from two calls to run
         
-        self.assertRaises(Exception,self.deb.check,())                  # should be checkinstall exception
+        self.assertRaises(Exception,debian.check,())                  # should be checkinstall exception
         
     def test_check_everything_present(self):
         class retobj: pass
@@ -81,6 +79,6 @@ class DistroTestSuite(unittest.TestCase):
             
         run.return_value = retval              # return these two objects from two calls to run
         
-        self.deb.check()
+        debian.check()
         
     

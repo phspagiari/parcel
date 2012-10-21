@@ -116,3 +116,8 @@ class Ubuntu(Distro):
         with settings(user='root'):
             run("apt-get install rubygems -y")
             run("gem install fpm")
+
+
+# the distribution module instances
+debian = Debian()
+ubuntu = Ubunut()

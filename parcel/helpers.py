@@ -35,12 +35,12 @@ def copy_ssh_key():
 
 def setup_debian():
     """Set up the build host for building in a debian way"""
-    from parcel.distro import Debian
-    Debian().setup()
+    from parcel.distro import debian
+    debian.setup()
 
 
 def setup_ubuntu():
     """Set up the build host for building in an Ubuntu way"""
-    from parcel.distro import Ubuntu
-    Ubuntu().setup()    
+    from parcel.distro import ubuntu
+    ubuntu.setup()    
     
