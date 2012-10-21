@@ -18,7 +18,8 @@ def dl(url,filename):
             fh.write(data)
 
 def rsync(sources,dest,rsync_ignore=None):
-    assert type(sources)!=str, "Must pass a list of sources into rsync"
+    if type(sources)==str:
+        sources = [sources]
     run('mkdir -p "%s"'%dest)
     
     command =   [   'rsync',
