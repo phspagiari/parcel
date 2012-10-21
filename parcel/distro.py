@@ -9,7 +9,7 @@ from .cache import cache
 # Used to represent the remote build distribution
 #
 
-class Debian(object):
+class Distro(object):
     space = '.parcel-build-temp'
     pip_download_cache = '/tmp/pip-download-cache/'
 
@@ -73,6 +73,15 @@ class Debian(object):
                 raise Exception("Build host does not have checkinstall installed and on the executable path")
         
     def setup(self):
+        """This method should set up a remote box for parcel package building.
+        It should install fpm.
+        """
+        raise NotImplementedError
+
+    
+class Debian(Distro):
+
+    def setup(self):
         """this method sets up a remote debian box for parcel package building.
         Installs fpm, easyinstall and some libraries
 
@@ -98,5 +107,12 @@ class Debian(object):
             run("gem1.8 install fpm")
 
 
+class Ubuntu(Distro):
 
-    
+    def setup(self):
+        """this method sets up a remote ubuntu box for parcel package building.
+        Installs fpm and also rubygems if not present.
+        """
+        with settings(user='root'):
+            run("apt-get install rubygems -y")
+            run("gem install fpm")

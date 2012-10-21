@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 #
 # Some actual fab targets that you can import into you fabfile
 # to provide some extra functions that you will usually need
 #
+import os
+from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
 
 def copy_ssh_key():
     """This copies the local uses id_rsa.pub and id_dsa.pub keys into the authorized_keys
@@ -34,5 +37,10 @@ def setup_debian():
     """Set up the build host for building in a debian way"""
     from parcel.distro import Debian
     Debian().setup()
-    
+
+
+def setup_ubuntu():
+    """Set up the build host for building in an Ubuntu way"""
+    from parcel.distro import Ubuntu
+    Ubuntu().setup()    
     
