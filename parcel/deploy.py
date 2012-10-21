@@ -7,6 +7,7 @@ from . import distro
 
 class Deployment(object):
     virtual = "vp"
+    build_dir = '.parcel'
 
     def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian()):
         """app_name: the package name
@@ -19,12 +20,13 @@ class Deployment(object):
         arch: the architecture of the build host
         """
         self.arch = arch
+        remotehome = run('echo $HOME')
         
         # if path isn't set, make it the home directory of the build user
         if base is None:
-            base = run('echo $HOME')
+            base = remotehome
         elif not base.startswith('/'):
-            base = os.path.join(run('echo $HOME'), base)
+            base = os.path.join(remotehome, base)
         
         # update and install missing build dependency packages
         arch.update_packages()
@@ -42,7 +44,16 @@ class Deployment(object):
         self.path = os.path.realpath(path)
 
 	    # the path we build everything on on the remote host
-        self.app_path = os.path.join(base,'%s-%s'%(self.pkg_name,self.version))
+        self.base_path = os.path.join(remotehome,self.build_dir)
+        
+        # the path the app will be installed into
+        self.app_path = os.path.join(self.base_path,base,'%s-%s'%(self.pkg_name,self.version))
+        
+        # the build path
+        self.build_path = os.path.join(self.basepath, self.app_path[1:])                # cut the first / off app_path
+        
+        print "BASE_PATH",self.base_path
+        print "APP PATH",self.app_path
         
     def prepare_app(self, branch=None, requirements="requirements.txt"):
         """creates the necessary directories on the build server, checks out the desired branch (None means current),
