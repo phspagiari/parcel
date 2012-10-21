@@ -57,6 +57,11 @@ Then you can use deb_ls to list the contents of the package::
 You will see that the package consists of all the files in your source directory. This is the simplest form of packaging.
 This is not that useful as it is only the files. But from here your fabfile can expand to implement some deployment scenarios.
 
+If you look at the packages control files with::
 
-    
+    $ fab -H debian.localdomain deb_control:myapp_0.0.0_all.deb
+
+you will notice the package we have build contains no pre or post, install or remove scripts. You can also see a filesystem tree
+of the final installed package with::
+    $ fab -H debian.localdomain deb_tree:myapp_0.0.0_all.deb
 
