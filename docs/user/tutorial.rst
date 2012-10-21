@@ -46,3 +46,15 @@ Make a `fabfile.py` here and put the following in it::
         deploy.prepare_app()
         deploy.build_deb()
         
+Let's have a quick look at the options here. The first argument to Deployment is the package name. This will be used to
+name the binary package when it's built. The `path` option is the path relative to the fabfile of what you want packaged.
+By default it is set to ".", but here we want to package the contents of the django project we've made, which is stored
+in directory "myproject". 
+
+The variable `base` is a path on the remote host where the package will be installed to. If this
+is ommitted, the install path is the home directory of the building user. If it's an absolute path (starting with /) then
+it's installed in that path. If it's a relative path like this setting, it is installed into that path relative to the
+build users home directory. So in our case it will be "~/webapps". So, for instance, if we were to build the package as
+user apache on debian (pass `-u apache` into our fab call), then the package would be installed under /var/www/webapps.
+
+
