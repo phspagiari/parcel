@@ -4,11 +4,12 @@ from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settin
 
 from . import versions
 from . import distro
+from . import tools
 
 class Deployment(object):
     virtual = "vp"
     build_dir = '.parcel'
-
+    
     def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian()):
         """app_name: the package name
         build_deps: a list of packages that need to be installed to build the software
@@ -45,12 +46,13 @@ class Deployment(object):
 
 	    # the path we build everything on on the remote host
         self.base_path = os.path.join(remotehome,self.build_dir)
+        self.root_path = os.path.join(self.base_path,"root")                    # where the final root fs is located
         
         # the path the app will be installed into
-        self.app_path = os.path.join(self.base_path,base,'%s-%s'%(self.pkg_name,self.version))
+        self.app_path = os.path.join(base,'%s-%s'%(self.pkg_name,self.version))
         
         # the build path
-        self.build_path = os.path.join(self.base_path, self.app_path[1:])                # cut the first / off app_path
+        self.build_path = os.path.join(self.root_path, self.app_path[1:])                # cut the first / off app_path
         
         print "BASE_PATH",self.base_path
         print "APP PATH",self.app_path
@@ -62,9 +64,7 @@ class Deployment(object):
         As a bonus it also fixes the shebangs ("#!") of all scripts in the virtualenv to point the correct Python path on the target system."""
         
         # theres no revision control atm so... just copy directory over
-        #put(self.path, self.app_path)
-        run('mkdir -p "%s"'%self.build_path)
-        local("rsync -av '%s/' '%s@%s:%s'"%(self.path,env.user,env.host,self.build_path))
+        tools.rsync([self.path+'/'],self.build_path,rsync_ignore='.rsync-ignore')
         
         self.venv_path = os.path.join(self.app_path, self.virtual)
         run('virtualenv %s'%(self.venv_path))
@@ -114,3 +114,94 @@ class Deployment(object):
             filename = rv.split('"')[-2]
             get(filename, './')
             run("rm '%s'"%filename)
+
+class uWSGI(Deployment):
+    PRERM="""#!/bin/sh
+
+set -e
+
+APP_NAME={0.app_name}
+
+case "$1" in
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear|purge|remove)
+        supervisorctl stop $APP_NAME
+    ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+"""
+
+    POSTRM=None
+    PREINST=None
+    POSTINST="""#!/bin/sh
+
+set -e
+
+APP_NAME={0.app_name}
+
+case "$1" in
+    configure)
+        virtualenv {0.venv_path}
+        supervisorctl start $APP_NAME
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+"""
+
+    def build_deb(self):
+        with cd(self.base_path):
+            self.run_deps.append('python-virtualenv')  
+            self.run_deps.append('supervisor')                 
+            deps_str = '-d ' + ' -d '.join(self.run_deps)
+            dirs_str = '.'
+            
+            run("rm -rf debian && mkdir -p debian")
+            
+            # render pre/posts
+            hooks = []
+            if self.PRERM:
+                prerm = self.PRERM.format(self)
+                tools.write_contents_to_remote(prerm,'debian/prerm')
+                hooks.extend(['--before-remove', '../debian/prerm'])
+                
+            if self.POSTRM:
+                postrm = self.POSTRM.format(self)
+                tools.write_contents_to_remote(postrm,'debian/postrm')
+                hooks.extend(['--after-remove', '../debian/postrm'])
+            
+            if self.PREINST:
+                preinst = self.PREINST.format(self)
+                tools.write_contents_to_remote(preinst,'debian/preinst')
+                hooks.extend(['--before-install', '../debian/preinst'])
+            
+            if self.POSTINST:
+                postinst = self.POSTINST.format(self)
+                tools.write_contents_to_remote(postinst,'debian/postinst')
+                hooks.extend(['--after-install', '../debian/postinst'])
+            
+            hooks_str = ' '.join(hooks)
+            
+        with cd(self.root_path):
+            rv = run(
+                'fpm -s dir -t deb -n {0.pkg_name} -v {0.version} '
+                '-a all -x "*.git" -x "*.bak" -x "*.orig" {1} '
+                '--description "Automated build. '
+                'No Version Control." '
+                '{2} {3}'
+                .format(self, hooks_str, deps_str, dirs_str)
+            )
+
+            filename = rv.split('"')[-2]
+            get(filename, './')
+            run("rm '%s'"%filename)
+        
