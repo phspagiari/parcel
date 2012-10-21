@@ -39,12 +39,17 @@ Go back to the project base. That's the directory with the virtual python 'vp' d
     
 Make a `fabfile.py` here and put the following in it::
 
-    from parcel.deploy import Deployment
+    from parcel.deploy import uWSGI
+    from parcel.probes import *
     
     def deb():
-        deploy = Deployment("myproject", path="myproject", base="webapps")
+        deploy = uWSGI("myproject", base="webapps")
         deploy.prepare_app()
         deploy.build_deb()
+        
+Fisrt thing is we are using the uWSGI Deployment object. This is a stripped down brute force uwsgi script::
+
+    .. todo:: Talk about different deployment strategies.
         
 Let's have a quick look at the options here. The first argument to Deployment is the package name. This will be used to
 name the binary package when it's built. The `path` option is the path relative to the fabfile of what you want packaged.
@@ -57,3 +62,23 @@ it's installed in that path. If it's a relative path like this setting, it is in
 build users home directory. So in our case it will be "~/webapps". So, for instance, if we were to build the package as
 user apache (pass `-u apache` into our fab call), then the package on debian would be installed under /var/www/webapps.
 
+Lets build the package::
+
+    $ fab -H debian deb
+    
+Once it's built, you can have a look at directory structure::
+
+    $ fab -H debian deb_tree:myproject_0.0.0_all.deb
+    
+and more interestingly it's control files::
+
+    $ fab -H debian deb_control:myproject_0.0.0_all.deb
+    
+You can see here how the uwsgi service is started on install and killed on exit. Not ideal. 
+
+    .. todo:: Make uwsgi work better.
+
+Now its time to test if it installs ok. Install the package on the build host as root::
+
+    $ fab -H debian -u root deb_install:myproject_0.0.0_all.deb 
+    

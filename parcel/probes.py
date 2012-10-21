@@ -20,7 +20,7 @@ def deb_install(deb):
     #put(deb,build_dir+"/"+deb)
     rsync(deb,build_dir)
     with cd(build_dir):
-        print green(quiet_run("dpkg --install '%s'"%deb))
+        print green(run("dpkg --install '%s'"%deb))
 
 def deb_control(deb):
     base_dir, src_dir, build_dir = debian._setup(clean=False)

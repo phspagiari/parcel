@@ -53,10 +53,16 @@ class Deployment(object):
         
         # the build path
         self.build_path = os.path.join(self.root_path, self.app_path[1:])                # cut the first / off app_path
-        
+            
         print "BASE_PATH",self.base_path
         print "APP PATH",self.app_path
         print "BUILD PATH",self.build_path
+        
+        self.clean()
+        
+    def clean(self):
+        # make sure this root fs directory is empty
+        run('rm -rf "%s"'%self.root_path)
         
     def prepare_app(self, branch=None, requirements="requirements.txt"):
         """creates the necessary directories on the build server, checks out the desired branch (None means current),
@@ -74,6 +80,9 @@ class Deployment(object):
 	            os.path.join(self.venv_path, 'bin/pip'),
 	            os.path.join(self.build_path, requirements))
             )
+            
+        # venv_root is final path
+        self.venv_root = os.path.join(self.app_path, self.virtual)
             
     def compile_python(self):
         # compile all python (with virtual python)
@@ -118,15 +127,15 @@ class Deployment(object):
 class uWSGI(Deployment):
     PRERM="""#!/bin/sh
 
-set -e
+#set -e
 
 APP_NAME={0.app_name}
 
 case "$1" in
     upgrade|failed-upgrade|abort-install|abort-upgrade|disappear|purge|remove)
-        kill `cat /var/pid/parcel-uwsgi.pid`
+        killall uwsgi
         sleep 3
-        kill -9 `cat /var/pid/parcel-uwsgi.pid`
+        killall -9 uwsgi
     ;;
 
     *)
@@ -140,25 +149,26 @@ esac
     PREINST=None
     POSTINST="""#!/bin/sh
 
-set -e
+#set -e
 
 APP_NAME={0.app_name}
 
 case "$1" in
     configure)
-        virtualenv {0.venv_path}
-        uwsgi   --chdir={0.app_path}                     \
-                --http=:8000                            \
-                --module={0.app_name}.wsgi                   \
-                --master --pidfile=/var/pid/parcel-uwsgi.pid \
-                --processes=5 \                 # number of worker processes
-                --uid=1000 --gid=2000 \         # if root, uwsgi can drop privileges
-                --harakiri=20 \                 # respawn processes taking more than 20 seconds
-                --limit-as=128 \                # limit the project to 128 MB
-                --max-requests=5000 \           # respawn processes after serving 5000 requests
-                --vacuum \                      # clear environment on exit
-                --home=/path/to/virtual/env \   # optional path to a virtualenv
-                --daemonize=/var/log/uwsgi/{0.app_name}.log      # background the process
+        virtualenv {0.venv_root}
+        mkdir -p /var/log/uwsgi
+        uwsgi   --chdir={0.app_path}                            \
+                --http=:8000                                    \
+                --module={0.app_name}.wsgi                      \
+                --master                                        \
+                --processes=5                                   \
+                --uid=1000 --gid=2000                           \
+                --harakiri=20                                   \
+                --limit-as=128                                  \
+                --max-requests=5000                             \
+                --vacuum                                        \
+                --home={0.venv_root}                            \
+                --daemonize=/var/log/uwsgi/{0.app_name}.log
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
