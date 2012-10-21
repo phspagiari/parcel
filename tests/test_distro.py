@@ -39,7 +39,7 @@ class DistroTestSuite(unittest.TestCase):
             self.assertTrue(command[0][0].startswith('mkdir '))
             
             # the classes build space should be in the path
-            self.assertTrue(self.deb.space in command[0][0])
+            self.assertTrue(debian.space in command[0][0])
         
     def test_check_fpm_not_present(self):
         def called(command):

@@ -120,4 +120,4 @@ class Ubuntu(Distro):
 
 # the distribution module instances
 debian = Debian()
-ubuntu = Ubunut()
+ubuntu = Ubuntu()

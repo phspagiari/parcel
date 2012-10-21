@@ -4,3 +4,4 @@
 # stuff for testing
 mock
 nose
+unittest2
