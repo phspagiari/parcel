@@ -83,6 +83,21 @@ class Deployment(object):
             
         # venv_root is final path
         self.venv_root = os.path.join(self.app_path, self.virtual)
+        
+    def add_to_root_fs(self,localfile,remotepath):
+        """add a local file to the root package path.
+        if remote path ends in /, the filename is carried over and into
+        that directory. If the remote path doesnt end in /, it represents the final filename
+        """
+        while remotepath[0]=='/':
+            remotepath=remotepath[1:]
+        put(localfile,os.path.join(self.root_path,remotepath))
+        
+    def add_data_to_root_fs(self, data, remotepath):
+        """sticks data in file on remotepath (relative to final root"""
+        while remotepath[0]=='/':
+            remotepath=remotepath[1:]
+        tools.write_contents_to_remote(data,os.path.join(self.root_path, remotepath))
             
     def compile_python(self):
         # compile all python (with virtual python)
@@ -100,16 +115,7 @@ class Deployment(object):
             self.run_deps.append('python-virtualenv')                   
             deps_str = '-d ' + ' -d '.join(self.run_deps)
             dirs_str = self.app_path
-            #hooks_str = ' '.join(
-            #    '{0} {1}'.format(opt, os.path.join('debian', fname))
-            #    for opt, fname in [
-            #        ('--before-remove', 'prerm'),
-            #        ('--after-remove', 'postrm'),
-            #        ('--before-install', 'preinst'),
-            #        ('--after-install', 'postinst'),
-            #    ]
-            #    if os.path.exists(os.path.join('debian', fname))
-            #)
+
             hooks_str = ''
             rv = run(
                 'fpm -s dir -t deb -n {0.pkg_name} -v {0.version} '
@@ -124,7 +130,35 @@ class Deployment(object):
             get(filename, './')
             run("rm '%s'"%filename)
 
-class uWSGI(Deployment):
+# try supervisord functionality as a mixin?
+class supervisord(object):
+    def add_supervisord_service(self):
+        self.add_data_to_root_fs("""[program:uwsgi]
+command=/usr/local/bin/uwsgi --ini=/etc/uwsgi/app.uswgi
+process_name=%(program_name)s
+numprocs=1
+directory=/tmp
+umask=022
+priority=999
+autostart=true
+autorestart=true
+startsecs=10
+startretries=3
+exitcodes=0,2
+stopsignal=TERM
+stopwaitsecs=10
+user=crispin
+redirect_stderr=false
+stdout_logfile=/var/log/uwsgi.log
+stdout_logfile_maxbytes=1MB
+stdout_logfile_backups=10
+stdout_capture_maxbytes=1MB
+serverurl=AUTO
+""","etc/supervisor/conf.d/uwsgi.conf")
+        
+
+
+class uWSGI(Deployment, supervisord):
     PRERM="""#!/bin/sh
 
 #set -e
@@ -133,9 +167,7 @@ APP_NAME={0.app_name}
 
 case "$1" in
     upgrade|failed-upgrade|abort-install|abort-upgrade|disappear|purge|remove)
-        killall uwsgi
-        sleep 3
-        killall -9 uwsgi
+        supervisorctl stop uwsgi
     ;;
 
     *)
@@ -156,19 +188,10 @@ APP_NAME={0.app_name}
 case "$1" in
     configure)
         virtualenv {0.venv_root}
-        mkdir -p /var/log/uwsgi
-        uwsgi   --chdir={0.app_path}                            \
-                --http=:8000                                    \
-                --module={0.app_name}.wsgi                      \
-                --master                                        \
-                --processes=5                                   \
-                --uid=1000 --gid=2000                           \
-                --harakiri=20                                   \
-                --limit-as=128                                  \
-                --max-requests=5000                             \
-                --vacuum                                        \
-                --home={0.venv_root}                            \
-                --daemonize=/var/log/uwsgi/{0.app_name}.log
+        /etc/init.d/supervisor stop
+        sleep 1
+        /etc/init.d/supervisor start
+        #supervisorctl start uwsgi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
@@ -182,6 +205,9 @@ esac
 """
 
     def build_deb(self):
+        self.write_uwsgi_file(port=8000, path=self.app_path, module='%s.wsgi'%(self.app_name))
+        self.add_supervisord_service()
+    
         with cd(self.base_path):
             self.run_deps.append('python-virtualenv')  
             self.run_deps.append('supervisor')                 
@@ -227,4 +253,17 @@ esac
             filename = rv.split('"')[-2]
             get(filename, './')
             run("rm '%s'"%filename)
+        
+    def write_uwsgi_file(self,port,path,module):
+        data = """[uwsgi]
+# set the http port
+http = :%d
+# change to django project directory
+chdir = %s/%s
+# load django
+module = %s
+home = %s
+"""%(port,path,self.app_name,module,self.venv_root)
+        self.add_data_to_root_fs(data,'/etc/uwsgi/app.uswgi')
+        
         

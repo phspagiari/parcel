@@ -48,6 +48,7 @@ def write_contents_to_remote(data,filename):
         
     # copy it
     try:
+        run('mkdir -p "%s"'%os.path.dirname(filename))
         put(name,filename)
     finally:
         os.unlink(name)
