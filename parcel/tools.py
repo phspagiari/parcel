@@ -1,5 +1,6 @@
 # helper utils
 from fabric.api import env, local, run, put, get
+from fabric.colors import green,blue
 import requests
 import os, tempfile, uuid
 
@@ -17,7 +18,7 @@ def dl(url,filename):
         for data in r.iter_content(BLOCK_SIZE):
             fh.write(data)
 
-def rsync(sources,dest,rsync_ignore=None):
+def rsync(sources,dest,rsync_ignore=None,color_files=True):
     if type(sources)==str:
         sources = [sources]
     run('mkdir -p "%s"'%dest)
@@ -35,8 +36,18 @@ def rsync(sources,dest,rsync_ignore=None):
             command.append('--exclude-from=%s'%rsync_ignore)
     
     
-                
-    local(" ".join(command))
+    if not color_files:   
+        return local(" ".join(command))
+        
+    data = local(" ".join(command),capture=True)
+    lines = data.splitlines()
+    lines = lines[1:]
+    i=0
+    while lines[i]:
+        print blue(lines[i])
+        i+=1
+    for line in lines[i:]:
+        print line     
     
 def write_contents_to_remote(data,filename):
     """creates a file on remote 'filename' that has contents 'data'

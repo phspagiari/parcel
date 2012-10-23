@@ -1,6 +1,7 @@
 import os.path
 
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
+from fabric.colors import green
 
 from . import versions
 from . import distro
@@ -195,6 +196,7 @@ class Deployment(object):
             filename = rv.split('"')[-2]
             get(filename, './')
             run("rm '%s'"%filename)
+            print green(os.path.basename(filename))
 
     def write_prerm_template(self):
         prerm_template = """#!/bin/sh
