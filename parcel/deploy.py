@@ -69,14 +69,18 @@ class Deployment(object):
         # make sure this root fs directory is empty
         run('rm -rf "%s"'%self.root_path)
         
+    def sync_app(self):
+        # theres no revision control atm so... just copy directory over
+        tools.rsync([self.path+'/'],self.build_path,rsync_ignore='.rsync-ignore')
+        
     def prepare_app(self, branch=None, requirements="requirements.txt"):
         """creates the necessary directories on the build server, checks out the desired branch (None means current),
         creates a virtualenv and populates it with dependencies from requirements.txt. 
         As a bonus it also fixes the shebangs ("#!") of all scripts in the virtualenv to point the correct Python path on the target system."""
-        
-        # theres no revision control atm so... just copy directory over
-        tools.rsync([self.path+'/'],self.build_path,rsync_ignore='.rsync-ignore')
-        
+        self.sync_app()
+        self.add_venv(requirements)
+    
+    def prepare_venv(self,requirements="requirements.txt"):
         self.venv_path = os.path.join(self.build_path, self.virtual)
         run('virtualenv %s'%(self.venv_path))
         if requirements:
@@ -162,11 +166,6 @@ class Deployment(object):
             filename = rv.split('"')[-2]
             get(filename, './')
             run("rm '%s'"%filename)
-            
-    def build_deb(self):
-        self.write_uwsgi_file(port=10080, path=self.app_path, module='%s.wsgi'%(self.app_name))
-        self.add_supervisord_service()
-    
         
 
 
