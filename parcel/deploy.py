@@ -1,10 +1,18 @@
 import os.path
 
-from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
+from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings, task
+from fabric.tasks import Task
 
 from . import versions
 from . import distro
 from . import tools
+
+env.app_name = 'default_app_name'
+env.run_deps = []
+env.build_deps = []
+env.base = None
+env.path = '.'
+env.arch = distro.Debian()
 
 class Deployment(object):
     virtual = "vp"
@@ -23,7 +31,8 @@ class Deployment(object):
     preinst_lines = []
     postinst_lines = []
     
-    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian()):
+    def __init__(self, app_name=env.app_name, build_deps=env.build_deps,
+                 run_deps=env.run_deps, path=env.path, base=env.base,arch=env.arch):
         """app_name: the package name
         build_deps: a list of packages that need to be installed to build the software
         run_deps: a list of packages that must be installed to run
@@ -298,6 +307,22 @@ home = %s
 """%(port,path,self.app_name,module,self.venv_root)
         self.add_data_to_root_fs(data,'/etc/uwsgi/%s.uswgi'%program_name)
         
-        
-        
-        
+
+@task
+def build():
+    deploy = Deployment(app_name=env.app_name, build_deps=env.build_deps,
+                    run_deps=env.run_deps, path=env.path, base=env.base,arch=env.arch)
+    deploy.clean()
+    deploy.prepare_app()
+    deploy.build_deb()
+
+@task
+def build_for_uwsgi():
+    assert env.service_name, "You need to set env.service_name"
+    assert env.port, "You need to set env.port"
+    deploy = uWSGI(app_name=env.app_name, build_deps=env.build_deps,
+                    run_deps=env.run_deps, path=env.path, base=env.base,arch=env.arch)
+    deploy.clean()
+    deploy.prepare_app()
+    deploy.add_supervisord_uwsgi_service(env.service_name, env.port)
+    deploy.build_deb()
