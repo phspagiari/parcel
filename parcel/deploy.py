@@ -10,10 +10,18 @@ class Deployment(object):
     virtual = "vp"
     build_dir = '.parcel'
     
+    # these are the full text versions of the scripts
     prerm = None
     postrm = None
     preinst = None
     postinst = None
+    
+    # these are a list representation of commands to go into the scripts
+    # if the control script templating is used
+    prerm_lines = []
+    postrm_lines = []
+    preinst_lines = []
+    postinst_lines = []
     
     def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian()):
         """app_name: the package name
@@ -93,6 +101,13 @@ class Deployment(object):
         # venv_root is final path
         self.venv_root = os.path.join(self.app_path, self.virtual)
         
+        # lets make sure this venv is relinked on installation
+        self.add_postinst(['virtualenv "%s"'%self.venv_root])
+        
+        # and we have the virtualenv executable
+        self.run_deps.append('python-virtualenv')  
+            
+        
     def add_to_root_fs(self,localfile,remotepath):
         """add a local file to the root package path.
         if remote path ends in /, the filename is carried over and into
@@ -112,17 +127,31 @@ class Deployment(object):
         # compile all python (with virtual python)
         run('%s -c "import compileall;compileall.compile_dir(\'%s\', force=1)"'%(os.path.join(self.venv_path, 'bin/python'),self.app_path))
 
-    def clear_py_files():
+    def clear_py_files(self):
         # clear all .py files
         run('find "%s" -name "*.py" -exec rm {} \;'%(self.app_path))
 
-    def build_deb(self):
+    def add_prerm(self, lines):
+        self.prerm_lines.extend(lines)
+        
+    def add_postrm(self, lines):
+        self.postrm_lines.extend(lines)
+        
+    def add_preinst(self, lines):
+        self.prerm_lines.extend(lines)
+        
+    def add_postinst(self, lines):
+        self.postrm_lines.extend(lines)
+        
+    def build_deb(self, templates=True):
         """takes the whole app including the virtualenv, packages it using fpm and downloads it to my local host.
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
 	    """
+        if templates:
+            self.write_prerm_template()
+            self.write_postinst_template()
+        
         with cd(self.base_path):
-            self.run_deps.append('python-virtualenv')  
-            self.run_deps.append('supervisor')                 
             deps_str = '-d ' + ' -d '.join(self.run_deps)
             dirs_str = '.'
             
@@ -166,19 +195,61 @@ class Deployment(object):
             filename = rv.split('"')[-2]
             get(filename, './')
             run("rm '%s'"%filename)
-        
+
+    def write_prerm_template(self):
+        prerm_template = """#!/bin/sh
+
+set -e
+
+APP_NAME={0.app_name}
+
+case "$1" in
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear|purge|remove)
+        %s
+    ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+"""
+        self.prerm = prerm_template%("\n        ".join(self.prerm_lines))     
+
+    def write_postinst_template(self):
+        postinst_template="""#!/bin/sh
+
+set -e
+
+APP_NAME={0.app_name}
+
+case "$1" in
+    configure)
+        %s
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+"""
+        self.postinst = postinst_template%("\n        ".join(self.postinst_lines))
+
+
 
 
 ##
-## try supervisord functionality as a mixin?
+## supervisord + uwsgi container deployment
 ##
-class supervisord(object):
-    _supervisor_default_command = "/usr/local/bin/uwsgi --ini=/etc/uwsgi/app.uswgi"
-    
-    def add_supervisord_service(self,program_name,command):
+class uWSGI(Deployment):
+    def add_supervisord_uwsgi_service(self,program_name,port=80,user=None):
         # add the config file
         self.add_data_to_root_fs("""[program:%s]
-command=%s
+command=/usr/local/bin/uwsgi --ini=/etc/uwsgi/%s.uswgi
 process_name=%s
 numprocs=1
 directory=/tmp
@@ -191,75 +262,31 @@ startretries=3
 exitcodes=0,2
 stopsignal=TERM
 stopwaitsecs=10
-user=crispin
+user=%s
 redirect_stderr=false
 stdout_logfile=/var/log/%s.log
 stdout_logfile_maxbytes=1MB
 stdout_logfile_backups=10
 stdout_capture_maxbytes=1MB
 serverurl=AUTO
-"""%(program_name, command or self._supervisor_default_command, program_name, program_name),uwsgiconf)
+"""%(program_name, program_name, program_name, user or env.user, program_name),uwsgiconf)
         
         # add the postinstall lines
         self.add_postinst(['/etc/init.d/supervisor stop','sleep 1','/etc/init.d/supervisor start'])
         
+        # add the prerm lines
+        self.add_prerm(['supervisorctl stop %s'%program_name])
+        
         # add the supervisor install dependency
-        self.run_deps.append('supervisor') 
+        self.run_deps.append('supervisor')              # also uwsgi on systems with it in packaging (redhat? ubuntu?)
+
+        # write out our uwsgi config
+        self.write_uwsgi_file(port=port, path=self.app_path, module='%s.wsgi'%(self.app_name))
         
+        # also in postinst is to start this app
+        self.add_postinst(['supervisorctl start %s'%program_name])
         
-
-class uWSGI(Deployment, supervisord):
-    PRERM="""#!/bin/sh
-
-#set -e
-
-APP_NAME={0.app_name}
-
-case "$1" in
-    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear|purge|remove)
-        supervisorctl stop uwsgi
-    ;;
-
-    *)
-        echo "prerm called with unknown argument \`$1'" >&2
-        exit 1
-    ;;
-esac
-"""
-
-    POSTRM=None
-    PREINST=None
-    POSTINST="""#!/bin/sh
-
-#set -e
-
-APP_NAME={0.app_name}
-
-case "$1" in
-    configure)
-        virtualenv {0.venv_root}
-        /etc/init.d/supervisor stop
-        sleep 1
-        /etc/init.d/supervisor start
-        #supervisorctl start uwsgi
-    ;;
-
-    abort-upgrade|abort-remove|abort-deconfigure)
-    ;;
-
-    *)
-        echo "postinst called with unknown argument \`$1'" >&2
-        exit 1
-    ;;
-esac
-"""
-
-    def install(self):
-        self.write_uwsgi_file(port=10080, path=self.app_path, module='%s.wsgi'%(self.app_name))
-        self.add_supervisord_service()
-    
-        
-    def write_uwsgi_file(self,port,path,module):
+    def write_uwsgi_file(self,port,path,module,program_name):
         data = """[uwsgi]
 # set the http port
 http = :%d
@@ -269,7 +296,7 @@ chdir = %s/%s
 module = %s
 home = %s
 """%(port,path,self.app_name,module,self.venv_root)
-        self.add_data_to_root_fs(data,'/etc/uwsgi/%s.uswgi'%self.app_name)
+        self.add_data_to_root_fs(data,'/etc/uwsgi/%s.uswgi'%self.program_name)
         
         
         
