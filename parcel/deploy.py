@@ -269,7 +269,7 @@ stdout_logfile_maxbytes=1MB
 stdout_logfile_backups=10
 stdout_capture_maxbytes=1MB
 serverurl=AUTO
-"""%(program_name, program_name, program_name, user or env.user, program_name),uwsgiconf)
+"""%(program_name, program_name, program_name, user or env.user, program_name), "etc/supervisor/conf.d/uwsgi.conf")
         
         # add the postinstall lines
         self.add_postinst(['/etc/init.d/supervisor stop','sleep 1','/etc/init.d/supervisor start'])
@@ -281,7 +281,7 @@ serverurl=AUTO
         self.run_deps.append('supervisor')              # also uwsgi on systems with it in packaging (redhat? ubuntu?)
 
         # write out our uwsgi config
-        self.write_uwsgi_file(port=port, path=self.app_path, module='%s.wsgi'%(self.app_name))
+        self.write_uwsgi_file(port=port, path=self.app_path, module='%s.wsgi'%(self.app_name), program_name=program_name)
         
         # also in postinst is to start this app
         self.add_postinst(['supervisorctl start %s'%program_name])
@@ -296,7 +296,7 @@ chdir = %s/%s
 module = %s
 home = %s
 """%(port,path,self.app_name,module,self.venv_root)
-        self.add_data_to_root_fs(data,'/etc/uwsgi/%s.uswgi'%self.program_name)
+        self.add_data_to_root_fs(data,'/etc/uwsgi/%s.uswgi'%program_name)
         
         
         
