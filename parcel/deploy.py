@@ -10,6 +10,11 @@ class Deployment(object):
     virtual = "vp"
     build_dir = '.parcel'
     
+    prerm = None
+    postrm = None
+    preinst = None
+    postinst = None
+    
     def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian()):
         """app_name: the package name
         build_deps: a list of packages that need to be installed to build the software
@@ -112,11 +117,39 @@ class Deployment(object):
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
 	    """
         with cd(self.base_path):
-            self.run_deps.append('python-virtualenv')                   
+            self.run_deps.append('python-virtualenv')  
+            self.run_deps.append('supervisor')                 
             deps_str = '-d ' + ' -d '.join(self.run_deps)
-            dirs_str = self.app_path
-
-            hooks_str = ''
+            dirs_str = '.'
+            
+            if self.prerm or self.postrm or self.preinst or self.postinst:
+                run("rm -rf debian && mkdir -p debian")
+            
+            # render pre/posts
+            hooks = []
+            if self.prerm:
+                prerm = self.prerm.format(self)
+                tools.write_contents_to_remote(prerm,'debian/prerm')
+                hooks.extend(['--before-remove', '../debian/prerm'])
+                
+            if self.postrm:
+                postrm = self.postrm.format(self)
+                tools.write_contents_to_remote(postrm,'debian/postrm')
+                hooks.extend(['--after-remove', '../debian/postrm'])
+            
+            if self.preinst:
+                preinst = self.preinst.format(self)
+                tools.write_contents_to_remote(preinst,'debian/preinst')
+                hooks.extend(['--before-install', '../debian/preinst'])
+            
+            if self.postinst:
+                postinst = self.postinst.format(self)
+                tools.write_contents_to_remote(postinst,'debian/postinst')
+                hooks.extend(['--after-install', '../debian/postinst'])
+            
+            hooks_str = ' '.join(hooks)
+            
+        with cd(self.root_path):
             rv = run(
                 'fpm -s dir -t deb -n {0.pkg_name} -v {0.version} '
                 '-a all -x "*.git" -x "*.bak" -x "*.orig" {1} '
@@ -129,13 +162,25 @@ class Deployment(object):
             filename = rv.split('"')[-2]
             get(filename, './')
             run("rm '%s'"%filename)
+            
+    def build_deb(self):
+        self.write_uwsgi_file(port=10080, path=self.app_path, module='%s.wsgi'%(self.app_name))
+        self.add_supervisord_service()
+    
+        
 
-# try supervisord functionality as a mixin?
+
+##
+## try supervisord functionality as a mixin?
+##
 class supervisord(object):
-    def add_supervisord_service(self):
-        self.add_data_to_root_fs("""[program:uwsgi]
-command=/usr/local/bin/uwsgi --ini=/etc/uwsgi/app.uswgi
-process_name=%(program_name)s
+    _supervisor_default_command = "/usr/local/bin/uwsgi --ini=/etc/uwsgi/app.uswgi"
+    
+    def add_supervisord_service(self,program_name,command):
+        # add the config file
+        self.add_data_to_root_fs("""[program:%s]
+command=%s
+process_name=%s
 numprocs=1
 directory=/tmp
 umask=022
@@ -149,14 +194,20 @@ stopsignal=TERM
 stopwaitsecs=10
 user=crispin
 redirect_stderr=false
-stdout_logfile=/var/log/uwsgi.log
+stdout_logfile=/var/log/%s.log
 stdout_logfile_maxbytes=1MB
 stdout_logfile_backups=10
 stdout_capture_maxbytes=1MB
 serverurl=AUTO
-""","etc/supervisor/conf.d/uwsgi.conf")
+"""%(program_name, command or self._supervisor_default_command, program_name, program_name),uwsgiconf)
         
-
+        # add the postinstall lines
+        self.add_postinst(['/etc/init.d/supervisor stop','sleep 1','/etc/init.d/supervisor start'])
+        
+        # add the supervisor install dependency
+        self.run_deps.append('supervisor') 
+        
+        
 
 class uWSGI(Deployment, supervisord):
     PRERM="""#!/bin/sh
@@ -204,55 +255,10 @@ case "$1" in
 esac
 """
 
-    def build_deb(self):
-        self.write_uwsgi_file(port=8000, path=self.app_path, module='%s.wsgi'%(self.app_name))
+    def install(self):
+        self.write_uwsgi_file(port=10080, path=self.app_path, module='%s.wsgi'%(self.app_name))
         self.add_supervisord_service()
     
-        with cd(self.base_path):
-            self.run_deps.append('python-virtualenv')  
-            self.run_deps.append('supervisor')                 
-            deps_str = '-d ' + ' -d '.join(self.run_deps)
-            dirs_str = '.'
-            
-            run("rm -rf debian && mkdir -p debian")
-            
-            # render pre/posts
-            hooks = []
-            if self.PRERM:
-                prerm = self.PRERM.format(self)
-                tools.write_contents_to_remote(prerm,'debian/prerm')
-                hooks.extend(['--before-remove', '../debian/prerm'])
-                
-            if self.POSTRM:
-                postrm = self.POSTRM.format(self)
-                tools.write_contents_to_remote(postrm,'debian/postrm')
-                hooks.extend(['--after-remove', '../debian/postrm'])
-            
-            if self.PREINST:
-                preinst = self.PREINST.format(self)
-                tools.write_contents_to_remote(preinst,'debian/preinst')
-                hooks.extend(['--before-install', '../debian/preinst'])
-            
-            if self.POSTINST:
-                postinst = self.POSTINST.format(self)
-                tools.write_contents_to_remote(postinst,'debian/postinst')
-                hooks.extend(['--after-install', '../debian/postinst'])
-            
-            hooks_str = ' '.join(hooks)
-            
-        with cd(self.root_path):
-            rv = run(
-                'fpm -s dir -t deb -n {0.pkg_name} -v {0.version} '
-                '-a all -x "*.git" -x "*.bak" -x "*.orig" {1} '
-                '--description "Automated build. '
-                'No Version Control." '
-                '{2} {3}'
-                .format(self, hooks_str, deps_str, dirs_str)
-            )
-
-            filename = rv.split('"')[-2]
-            get(filename, './')
-            run("rm '%s'"%filename)
         
     def write_uwsgi_file(self,port,path,module):
         data = """[uwsgi]
@@ -264,6 +270,8 @@ chdir = %s/%s
 module = %s
 home = %s
 """%(port,path,self.app_name,module,self.venv_root)
-        self.add_data_to_root_fs(data,'/etc/uwsgi/app.uswgi')
+        self.add_data_to_root_fs(data,'/etc/uwsgi/%s.uswgi'%self.app_name)
+        
+        
         
         
