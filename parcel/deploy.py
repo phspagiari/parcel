@@ -88,7 +88,7 @@ class Deployment(object):
         self.sync_app()
         self.add_venv(requirements)
     
-    def prepare_venv(self,requirements="requirements.txt"):
+    def add_venv(self,requirements="requirements.txt"):
         self.venv_path = os.path.join(self.build_path, self.virtual)
         run('virtualenv %s'%(self.venv_path))
         if requirements:
@@ -138,10 +138,10 @@ class Deployment(object):
         self.postrm_lines.extend(lines)
         
     def add_preinst(self, lines):
-        self.prerm_lines.extend(lines)
+        self.preinst_lines.extend(lines)
         
     def add_postinst(self, lines):
-        self.postrm_lines.extend(lines)
+        self.postinst_lines.extend(lines)
         
     def build_deb(self, templates=True):
         """takes the whole app including the virtualenv, packages it using fpm and downloads it to my local host.
