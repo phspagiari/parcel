@@ -42,6 +42,9 @@ Make a `fabfile.py` here and put the following in it::
     from parcel.deploy import uWSGI
     from parcel.probes import *
     
+    from fabric.api import task
+    
+    @task
     def deb():
         deploy = uWSGI("myproject", base="webapps")
         deploy.prepare_app()
@@ -49,9 +52,7 @@ Make a `fabfile.py` here and put the following in it::
         deploy.build_deb()
         
 Fisrt thing is we are using the uWSGI Deployment object. This is a stripped down uwsgi deployment container::
-
-    .. todo:: Talk about different deployment strategies.
-        
+       
 Let's have a quick look at the options here. The first argument to Deployment is the package name. This will be used to
 name the binary package when it's built. The variable `base` is a path on the remote host where the package will be installed to. If this
 is ommitted, the install path is the home directory of the building user. If it's an absolute path (starting with /) then
