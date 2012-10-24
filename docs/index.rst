@@ -18,7 +18,7 @@ and deploying Python web applications using native packages.
 Feature Support
 ---------------
 
-Presently Parcel only supports the following: 
+Parcel is under heavy development and initially supports: 
 
 - mercurial repositories
 - debian targets
@@ -26,7 +26,7 @@ Presently Parcel only supports the following:
 
 
 
-.. include:: contents.rst
+.. include:: contents.rst.inc
 
 
 Indices and tables

@@ -51,7 +51,7 @@ Make a `fabfile.py` here and put the following in it::
         deploy.add_supervisord_uwsgi_service("mproject",port=10000)
         deploy.build_deb()
         
-Fisrt thing is we are using the uWSGI Deployment object. This is a stripped down uwsgi deployment container::
+Fisrt thing is we are using the uWSGI Deployment object. This is a stripped down uwsgi deployment container.
        
 Let's have a quick look at the options here. The first argument to Deployment is the package name. This will be used to
 name the binary package when it's built. The variable `base` is a path on the remote host where the package will be installed to. If this

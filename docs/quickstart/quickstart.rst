@@ -9,12 +9,7 @@ This page gives a good introduction in how to get started with Parcel.
 This assumes you already have Parcel installed. If you do not,
 head over to the :ref:`Installation <install>` section.
 
-First, make sure that:
-
-* Parcel is :ref:`installed <install>`
-* Parcel is :ref:`up-to-date <updates>`
-
-Secondly, make sure you have a build host setup that you can use to build some packages.
+You will also need to have a build host set up that you can use to build some packages.
 You could setup a :ref:`Debian machine to be a build host <buildhost>` for this quickstart.
 
 From here we assume that you build host is a debian machine available with the name
@@ -63,5 +58,6 @@ If you look at the packages control files with::
 
 you will notice the package we have build contains no pre or post, install or remove scripts. You can also see a filesystem tree
 of the final installed package with::
+
     $ fab -H debian.localdomain deb_tree:myapp_0.0.0_all.deb
 

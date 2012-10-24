@@ -51,5 +51,5 @@ Once this full source build is done, the resultant compiled files are packaged.
 Parcel License
 --------------
 
-.. include:: ../../LICENSE
+.. include:: ../LICENSE
     
