@@ -8,32 +8,26 @@ Parcel
 ******
 
 Parcel: Pragmatic Python Webapp Deployment
-==========================================
+===========================================
 
 Parcel v\ |version|. (:ref:`Installation <install>`)
 
-Parcel is a suite of classes designed to be used within `Fabric <http://docs.fabfile.org/en/1.4.3/>`_ for building and deploying
-Python web applications. 
+Parcel is a suite of classes and helper functions designed to be used in 
+conjunction with `Fabric <http://docs.fabfile.org/en/1.4.3/>`_ for building 
+and deploying Python web applications using native packages.
 
 Feature Support
 ---------------
 
 Presently Parcel only supports the following: 
 
-Source Tree
-^^^^^^^^^^^
-
 - mercurial repositories
-
-Deploy Architecture
-^^^^^^^^^^^^^^^^^^^
-
 - debian targets
+- uwsgi deployment
 
-Deployment Style
-^^^^^^^^^^^^^^^^
 
-- uwsgi
+
+.. include:: contents.rst
 
 
 User Guide

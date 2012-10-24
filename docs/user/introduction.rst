@@ -1,8 +1,5 @@
 .. _introduction:
 
-Introduction
-============
-
 Origin
 ------
 Hynek Schlawack `wrote an article <http://hynek.me/articles/python-app-deployment-with-native-packages/>`_ about python
