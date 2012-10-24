@@ -96,5 +96,5 @@ Now its time to test if it installs ok. Install the package on the build host as
     $ fab -H debian -u root deb_install:myproject_0.0.0_all.deb 
     
 Now point your browser at http://debian:10000/ (where debian is the hostname/ip where you installed the deb package) and you should see
-exactly what you saw from runserver locally. Congratulations! You just packaged and deployed a django appliaction.
+exactly what you saw from runserver locally. Congratulations! You just packaged and deployed a django application.
 
