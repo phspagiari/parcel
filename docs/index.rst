@@ -29,21 +29,6 @@ Presently Parcel only supports the following:
 .. include:: contents.rst
 
 
-User Guide
-----------
-
-This part of the documentation takes you through Parcels and shows you how to use it to deploy your projects.
-
-.. toctree::
-    :maxdepth: 2
-    
-    user/introduction
-    user/install
-    user/quickstart
-    user/buildhost
-    user/tutorial
-
-
 Indices and tables
 ==================
 

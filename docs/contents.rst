@@ -6,7 +6,7 @@ An overview of Parcel's origins and intended uses.
 .. toctree::
    :maxdepth: 1
 
-   user/introduction.rst
+   introduction.rst
 
 
 Installation
@@ -30,6 +30,15 @@ A quick introduction to Parcel for those who want to dive on in.
 
    quickstart/quickstart
 
+Tutorials
+---------
+
+A more in-depth guide to using Parcel to build and deploy packages for common web applications.
+
+.. toctree::
+   :maxdepth: 2
+
+   tutorial/tutorial
 
 
 Build Host
