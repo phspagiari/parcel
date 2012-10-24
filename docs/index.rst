@@ -3,12 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-******   
 Parcel
-******
+======
 
 Parcel: Pragmatic Python Webapp Deployment
-==========================================
+------------------------------------------
 
 Parcel v\ |version|. (:ref:`Installation <install>`)
 
