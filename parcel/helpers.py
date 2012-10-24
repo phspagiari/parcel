@@ -4,12 +4,13 @@
 # to provide some extra functions that you will usually need
 #
 import os
-from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
+from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings, task
 
+@task
 def copy_ssh_key():
-    """This copies the local uses id_rsa.pub and id_dsa.pub keys into the authorized_keys
+    """Copy the local user id_rsa.pub and id_dsa.pub keys into the authorized_keys
     file on the remote host as the remote user. It creates the authorized_keys file if
-    it's missing.
+    it is missing.
     """
     lpath = os.path.expanduser("~/.ssh/")
     rpath = '~/.ssh/'
@@ -33,14 +34,15 @@ def copy_ssh_key():
 
                 run('rm %s%s'%(rpath,parcel_fname))
 
+@task
 def setup_debian():
-    """Set up the build host for building in a debian way"""
+    """Set up the build host for building in a Debian way."""
     from parcel.distro import debian
     debian.setup()
 
-
+@task
 def setup_ubuntu():
-    """Set up the build host for building in an Ubuntu way"""
+    """Set up the build host for building in an Ubuntu way."""
     from parcel.distro import ubuntu
     ubuntu.setup()    
     
