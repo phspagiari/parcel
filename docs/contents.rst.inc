@@ -17,7 +17,7 @@ Installation of Parcel.
 .. toctree::
    :maxdepth: 2
 
-   install/index
+   user/install
 
 
 Quickstart
@@ -28,7 +28,7 @@ A quick introduction to Parcel for those who want to dive on in.
 .. toctree::
    :maxdepth: 2
 
-   quickstart/quickstart
+   user/quickstart
 
 Tutorials
 ---------
@@ -38,7 +38,7 @@ A more in-depth guide to using Parcel to build and deploy packages for common we
 .. toctree::
    :maxdepth: 2
 
-   tutorial/tutorial
+   user/tutorial
 
 
 Build Host
