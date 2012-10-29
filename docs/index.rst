@@ -28,6 +28,13 @@ Parcel is under heavy development and initially supports:
 
 .. include:: contents.rst.inc
 
+API
+---
+
+.. toctree::
+    :maxdepth: 2
+    
+    api
 
 Indices and tables
 ==================
