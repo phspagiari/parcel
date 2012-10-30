@@ -5,16 +5,17 @@ Quickstart
 
 .. module:: parcel.models
 
-This page gives a good introduction in how to get started with Parcel. 
+This page gives a good introduction to getting started with Parcel. 
 This assumes you already have Parcel installed. If you do not,
 head over to the :ref:`Installation <install>` section.
 
 You will also need to have a build host set up that you can use to build some packages.
-You could setup a :ref:`Debian machine to be a build host <buildhost>` for this quickstart.
+You could setup a :ref:`Debian machine to be a build host <buildhost>` for this
+quick start guide.
 
-From here we assume that you build host is a debian machine available with the name
-`debian.localdomain`. Replace that name where it occurs below with your debian machines hostname
-or ip address. Let's get started with some simple examples.
+From here on in we assume that your build host is a Debian machine available with the name
+`debian.localdomain`. Replace that name where it occurs below with your own Debian machine's
+hostname or IP address. Let's get started with some simple examples.
 
 Making a Package
 ------------------
@@ -56,7 +57,7 @@ If you look at the packages control files with::
 
     $ fab -H debian.localdomain deb_control:myapp_0.0.0_all.deb
 
-you will notice the package we have build contains no pre or post, install or remove scripts. You can also see a filesystem tree
+you will notice the package we have built contains no install or remove scripts. You can also see a filesystem tree
 of the final installed package with::
 
     $ fab -H debian.localdomain deb_tree:myapp_0.0.0_all.deb
