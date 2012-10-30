@@ -24,7 +24,7 @@ class Deployment(object):
     preinst_lines = []
     postinst_lines = []
     
-    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian()):
+    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian(), version=None):
         """app_name: the package name
         build_deps: a list of packages that need to be installed to build the software
         run_deps: a list of packages that must be installed to run
@@ -49,7 +49,7 @@ class Deployment(object):
             arch.build_deps(build_deps)
             
         # the version in the archives of this package if we have been built and uploaded before.
-        self.version = arch.version(app_name)
+        self.version = arch.version(app_name).next() if version is None else versions.Version(version)
         
         self.app_name = app_name
         self.run_deps = run_deps
