@@ -10,6 +10,7 @@ from .tools import read_contents_from_remote, quiet_run, rsync
 
 @task
 def deb_ls(deb):
+    """List the contents of the given package."""
     base_dir, src_dir, build_dir = debian._setup(clean=False)
     #put(deb,build_dir+"/"+deb)
     rsync(deb,build_dir)
@@ -18,6 +19,7 @@ def deb_ls(deb):
 
 @task                
 def deb_install(deb):
+    """Install the given package."""
     base_dir, src_dir, build_dir = debian._setup(clean=False)
     #put(deb,build_dir+"/"+deb)
     rsync(deb,build_dir)

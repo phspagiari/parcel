@@ -8,6 +8,10 @@ from . import distro
 from . import tools
 
 class Deployment(object):
+    """The core :class:`Deployment <Deployment>` object. All Fabric tasks built with
+    Parcel will probably use this an instance of this class.
+    """
+
     virtual = "vp"
     build_dir = '.parcel'
     
@@ -25,15 +29,8 @@ class Deployment(object):
     postinst_lines = []
     
     def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian()):
-        """app_name: the package name
-        build_deps: a list of packages that need to be installed to build the software
-        run_deps: a list of packages that must be installed to run
-        path: the directory to end up being the base level directory.
-        base: where the path will be located on the build host. default is use homedir.
-                if path is relative, its relative to remote homedir
-                if path is absolute, its the path.
-        arch: the architecture of the build host
-        """
+
+        #: The architecture of the build host. This should be a :class:`Distro <Distro>` object. 
         self.arch = arch
         remotehome = run('echo $HOME').strip()
         
@@ -50,16 +47,25 @@ class Deployment(object):
             
         # the version in the archives of this package if we have been built and uploaded before.
         self.version = arch.version(app_name)
-        
-        self.app_name = app_name
-        self.run_deps = run_deps
-        self.build_deps = build_deps
-        self.pkg_name = app_name.lower()
 
+        #: The name of the resulting package.
+        self.app_name = app_name
+
+        #: A list of packages that must be installed to run the resulting package.
+        self.run_deps = run_deps
+
+        #: A list of packages that need to be installed to build the software.
+        self.build_deps = build_deps
+
+        #: The directory that will be used as the base level directory.
         self.path = os.path.realpath(path)
 
-	    # the path we build everything on on the remote host
+	    #: Location of files during build on build host. Default is user's home directory.
+        #: If path is relative, it's relative to the remote user's home directory. If the path is absolute,
+        #: it's used as is.
         self.base_path = os.path.join(remotehome,self.build_dir)
+
+        self.pkg_name = app_name.lower()
         self.root_path = os.path.join(self.base_path,"root")                    # where the final root fs is located
         
         # the path the app will be installed into
@@ -75,21 +81,26 @@ class Deployment(object):
         self.clean()
         
     def clean(self):
-        # make sure this root fs directory is empty
+        """Make sure the root filesystem directory is empty."""
         run('rm -rf "%s"'%self.root_path)
         
     def sync_app(self):
-        # theres no revision control atm so... just copy directory over
+        """There is no revision control at the moment so... just copy directory over."""
         tools.rsync([self.path+'/'],self.build_path,rsync_ignore='.rsync-ignore')
         
     def prepare_app(self, branch=None, requirements="requirements.txt"):
-        """creates the necessary directories on the build server, checks out the desired branch (None means current),
+        """Creates the necessary directories on the build server, checks out the desired branch (None means current),
         creates a virtualenv and populates it with dependencies from requirements.txt. 
-        As a bonus it also fixes the shebangs ("#!") of all scripts in the virtualenv to point the correct Python path on the target system."""
+        As a bonus it also fixes the shebangs ("#!") of all scripts in the virtualenv to point the correct Python path
+        on the target system."""
         self.sync_app()
         self.add_venv(requirements)
     
     def add_venv(self,requirements="requirements.txt"):
+        """Builds virtualenv on remote host and installs from requirements.txt.
+        
+        :param requirements: The name of the requirements.txt file.
+        """
         self.venv_path = os.path.join(self.build_path, self.virtual)
         run('virtualenv %s'%(self.venv_path))
         if requirements:
@@ -110,16 +121,17 @@ class Deployment(object):
             
         
     def add_to_root_fs(self,localfile,remotepath):
-        """add a local file to the root package path.
-        if remote path ends in /, the filename is carried over and into
-        that directory. If the remote path doesnt end in /, it represents the final filename
+        """Add a local file to the root package path.
+        If remote path ends in /, the filename is copied into
+        that directory. If the remote path doesn't end in /, it represents
+        the final filename.
         """
         while remotepath[0]=='/':
             remotepath=remotepath[1:]
         put(localfile,os.path.join(self.root_path,remotepath))
         
     def add_data_to_root_fs(self, data, remotepath):
-        """sticks data in file on remotepath (relative to final root"""
+        """Copies data in file on remotepath (relative to final root)"""
         while remotepath[0]=='/':
             remotepath=remotepath[1:]
         tools.write_contents_to_remote(data,os.path.join(self.root_path, remotepath))
@@ -133,19 +145,23 @@ class Deployment(object):
         run('find "%s" -name "*.py" -exec rm {} \;'%(self.app_path))
 
     def add_prerm(self, lines):
+        """Add lines to the prerm file"""
         self.prerm_lines.extend(lines)
         
     def add_postrm(self, lines):
+        """Add lines to the postrm file"""        
         self.postrm_lines.extend(lines)
         
     def add_preinst(self, lines):
+        """Add lines to the preinst file"""        
         self.preinst_lines.extend(lines)
         
     def add_postinst(self, lines):
+        """Add lines to the postinst file"""
         self.postinst_lines.extend(lines)
         
     def build_deb(self, templates=True):
-        """takes the whole app including the virtualenv, packages it using fpm and downloads it to my local host.
+        """Takes the whole app including the virtualenv, packages it using fpm and downloads it to the local host.
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
 	    """
         if templates:

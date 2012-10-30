@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-#
-# Some actual fab targets that you can import into you fabfile
-# to provide some extra functions that you will usually need
-#
+"""Some actual fab targets that you can import into you fabfile
+to provide some extra functions that you will usually need.
+"""
+
 import os
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings, task
 
