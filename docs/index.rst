@@ -35,6 +35,14 @@ API
     :maxdepth: 2
     
     api
+        
+Authors
+-------
+
+.. toctree::
+    :maxdepth: 2
+    
+    authors
 
 Indices and tables
 ==================
