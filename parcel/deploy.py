@@ -48,7 +48,7 @@ class Deployment(object):
         # the version in the archives of this package if we have been built and uploaded before.
         self.version = arch.version(app_name).next() if version is None else versions.Version(version)
         
-#: The name of the resulting package.
+        #: The name of the resulting package.
         self.app_name = app_name
 
         #: A list of packages that must be installed to run the resulting package.
