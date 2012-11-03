@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os.path
 
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
@@ -6,6 +7,7 @@ from fabric.colors import green
 from . import versions
 from . import distro
 from . import tools
+from . import defaults
 
 class Deployment(object):
     """The core :class:`Deployment <Deployment>` object. All Fabric tasks built with
@@ -78,7 +80,7 @@ class Deployment(object):
         print "BASE_PATH",self.base_path
         print "APP PATH",self.app_path
         print "BUILD PATH",self.build_path
-        
+
         self.clean()
         
     def clean(self):
@@ -92,7 +94,7 @@ class Deployment(object):
     def prepare_app(self, branch=None, requirements="requirements.txt"):
         """Creates the necessary directories on the build server, checks out the desired branch (None means current),
         creates a virtualenv and populates it with dependencies from requirements.txt. 
-        As a bonus it also fixes the shebangs ("#!") of all scripts in the virtualenv to point the correct Python path
+        As a bonus it also fixes the shebangs (#!) of all scripts in the virtualenv to point the correct Python path
         on the target system."""
         self.sync_app()
         self.add_venv(requirements)
@@ -165,9 +167,13 @@ class Deployment(object):
         """Takes the whole app including the virtualenv, packages it using fpm and downloads it to the local host.
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
 	    """
+
+        # add install and remove templates, use defaults if not supplied
         if templates:
-            self.write_prerm_template()
-            self.write_postinst_template()
+            if not self.prerm:
+                self.write_prerm_template(defaults.prerm_template)
+            if not self.postinst:
+                self.write_postinst_template(defaults.postinst_template)
         
         with cd(self.base_path):
             deps_str = '-d ' + ' -d '.join(self.run_deps)
@@ -189,13 +195,11 @@ class Deployment(object):
                 hooks.extend(['--after-remove', '../debian/postrm'])
             
             if self.preinst:
-                preinst = self.preinst.format(self)
-                tools.write_contents_to_remote(preinst,'debian/preinst')
+                tools.write_contents_to_remote(self.preinst,'debian/preinst')
                 hooks.extend(['--before-install', '../debian/preinst'])
             
             if self.postinst:
-                postinst = self.postinst.format(self)
-                tools.write_contents_to_remote(postinst,'debian/postinst')
+                tools.write_contents_to_remote(self.postinst,'debian/postinst')
                 hooks.extend(['--after-install', '../debian/postinst'])
             
             hooks_str = ' '.join(hooks)
@@ -215,50 +219,15 @@ class Deployment(object):
             run("rm '%s'"%filename)
             print green(os.path.basename(filename))
 
-    def write_prerm_template(self):
-        prerm_template = """#!/bin/sh
+    def write_prerm_template(self, template):
+        """Take a template prerm script and format it with appname and prerm_lines
+        If you call this function you must supply a template string that includes {app_name} and {lines}."""
+        self.prerm = template.format(app_name=self.app_name, lines="\n        ".join(self.prerm_lines))
 
-set -e
-
-APP_NAME={0.app_name}
-
-case "$1" in
-    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear|purge|remove)
-        %s
-    ;;
-
-    *)
-        echo "prerm called with unknown argument \`$1'" >&2
-        exit 1
-    ;;
-esac
-"""
-        self.prerm = prerm_template%("\n        ".join(self.prerm_lines))     
-
-    def write_postinst_template(self):
-        postinst_template="""#!/bin/sh
-
-set -e
-
-APP_NAME={0.app_name}
-
-case "$1" in
-    configure)
-        %s
-    ;;
-
-    abort-upgrade|abort-remove|abort-deconfigure)
-    ;;
-
-    *)
-        echo "postinst called with unknown argument \`$1'" >&2
-        exit 1
-    ;;
-esac
-"""
-        self.postinst = postinst_template%("\n        ".join(self.postinst_lines))
-
-
+    def write_postinst_template(self, template):
+        """Take a template postinst script and format it with appname and postinst_lines.
+        If you call this function you must supply a template string that includes {app_name} and {lines}."""
+        self.postinst = template.format(app_name=self.app_name, lines="\n        ".join(self.postinst_lines))
 
 
 ##

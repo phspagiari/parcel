@@ -4,6 +4,14 @@ from fabric.api import run
 import sys
 
 from parcel.distro import debian
+from parcel.deploy import Deployment
+
+
+class TestDeploy(Deployment):
+    """Simple test class for deploytment which  overrides __init__ so we are not calling remote host"""
+    def __init__(self, app_name=None):
+        self.app_name = app_name
+
 
 class DistroTestSuite(unittest.TestCase):
     """Versions test cases."""
@@ -82,3 +90,46 @@ class DistroTestSuite(unittest.TestCase):
         debian.check()
         
     
+    def test_write_prerm_template(self):
+
+        # override __init__ so we are not calling remote host
+        class TestDeploy(Deployment):
+            def __init__(self, app_name=None):
+                self.app_name = app_name
+
+        prerm_template = "Test rm template {app_name} and {lines}"
+
+        # test with no prerm lines
+        app_name = "testapp"
+        lines = []
+        d = TestDeploy(app_name=app_name)
+        d.write_prerm_template(prerm_template)
+        self.assertEquals(d.prerm, prerm_template.format(app_name=app_name, lines="\n        ".join(lines)))
+
+        # test with prerm lines
+        app_name = "testapp"
+        lines = ["test line 1", "test line 2"]
+        d = TestDeploy(app_name=app_name)
+        d.add_prerm(lines)
+        d.write_prerm_template(prerm_template)
+        self.assertEquals(d.prerm, prerm_template.format(app_name=app_name, lines="\n        ".join(lines)))
+
+
+    def test_write_postinst_template(self):
+
+        postinst_template = "Test postint template {app_name} and {lines}"
+
+        # test with no postinst lines
+        app_name = "testapp"
+        lines = []
+        d = TestDeploy(app_name=app_name)
+        d.write_postinst_template(postinst_template)
+        self.assertEquals(d.postinst, postinst_template.format(app_name=app_name, lines="\n        ".join(lines)))
+
+        # test with postinst lines
+        app_name = "testapp"
+        lines = ["test line 1", "test line 2"]
+        d = TestDeploy(app_name=app_name)
+        d.add_postinst(lines)
+        d.write_postinst_template(postinst_template)
+        self.assertEquals(d.postinst, postinst_template.format(app_name=app_name, lines="\n        ".join(lines)))
