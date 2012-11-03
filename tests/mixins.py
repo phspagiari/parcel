@@ -2,7 +2,7 @@ import sys, os
 import threading
 import SimpleHTTPServer
 import SocketServer
-import socket
+import socket, errno
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
@@ -17,7 +17,7 @@ class WebServerMixin(object):
             try:
                 self.server = ThreadedTCPServer((self.host, port), SimpleHTTPServer.SimpleHTTPRequestHandler)
             except socket.error, e:
-                if e.errno==48:
+                if e.errno==errno.EADDRINUSE:
                     port += 1               # address in use. Increase the port
                 else:
                     raise e
