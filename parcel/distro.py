@@ -19,20 +19,6 @@ class Distro(object):
     def __init__(self):
         pass
 
-    def _cleanup(self):
-        run("rm -rf '%s'"%self.space)  
-
-    def _setup(self, clean=True):
-        # first cleanup any broken stale previous builds
-        if clean:
-            self._cleanup()
-
-        # make fresh directories
-        base_dir = self.mkdir(self.space)
-        src_dir = self.mkdir(self.space+"/src")
-        build_dir = self.mkdir(self.space+"/build")
-        return base_dir, src_dir, build_dir
-        
     @property
     def build_base(self):
         return '/tmp/'
@@ -87,8 +73,23 @@ class Distro(object):
         authentication. This method should be used for testing package
         installation before using push_to_repo."""
         raise NotImplementedError
-    
-    
+
+    def _cleanup(self):
+        run("rm -rf '%s'"%self.space)  
+
+    def _setup(self, clean=True):
+        # first cleanup any broken stale previous builds
+        if clean:
+            self._cleanup()
+
+        # make fresh directories
+        base_dir = self.mkdir(self.space)
+        src_dir = self.mkdir(self.space+"/src")
+        build_dir = self.mkdir(self.space+"/build")
+        return base_dir, src_dir, build_dir
+
+
+
 class Debian(Distro):
 
     def setup(self):
