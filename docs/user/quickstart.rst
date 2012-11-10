@@ -25,7 +25,8 @@ Making a package is very simple. Begin by going to the base directory of your pr
 Then in that file write the following::
 
     from parcel.deploy import Deployment
-    
+
+    @task        
     def deb():
         deploy = Deployment("myapp")
         deploy.prepare_app()
