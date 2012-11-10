@@ -81,48 +81,16 @@ class Deployment(object):
         print "APP PATH",self.app_path
         print "BUILD PATH",self.build_path
 
-        self.clean()
-        
-    def clean(self):
-        """Make sure the root filesystem directory is empty."""
-        run('rm -rf "%s"'%self.root_path)
-        
-    def sync_app(self):
-        """There is no revision control at the moment so... just copy directory over."""
-        tools.rsync([self.path+'/'],self.build_path,rsync_ignore='.rsync-ignore')
+        self._clean()
         
     def prepare_app(self, branch=None, requirements="requirements.txt"):
         """Creates the necessary directories on the build server, checks out the desired branch (None means current),
         creates a virtualenv and populates it with dependencies from requirements.txt. 
         As a bonus it also fixes the shebangs (#!) of all scripts in the virtualenv to point the correct Python path
         on the target system."""
-        self.sync_app()
-        self.add_venv(requirements)
-    
-    def add_venv(self,requirements="requirements.txt"):
-        """Builds virtualenv on remote host and installs from requirements.txt.
-        
-        :param requirements: The name of the requirements.txt file.
-        """
-        self.venv_path = os.path.join(self.build_path, self.virtual)
-        run('virtualenv %s'%(self.venv_path))
-        if requirements:
-            run('PIP_DOWNLOAD_CACHE="%s" %s install -r %s'%(
-                self.arch.pip_download_cache,
-	            os.path.join(self.venv_path, 'bin/pip'),
-	            os.path.join(self.build_path, requirements))
-            )
+        self._sync_app()
+        self._add_venv(requirements)
             
-        # venv_root is final path
-        self.venv_root = os.path.join(self.app_path, self.virtual)
-        
-        # lets make sure this venv is relinked on installation
-        self.add_postinst(['virtualenv "%s"'%self.venv_root])
-        
-        # and we have the virtualenv executable
-        self.run_deps.append('python-virtualenv')  
-            
-        
     def add_to_root_fs(self,localfile,remotepath):
         """Add a local file to the root package path.
         If remote path ends in /, the filename is copied into
@@ -171,9 +139,9 @@ class Deployment(object):
         # add install and remove templates, use defaults if not supplied
         if templates:
             if not self.prerm:
-                self.write_prerm_template(defaults.prerm_template)
+                self._write_prerm_template(defaults.prerm_template)
             if not self.postinst:
-                self.write_postinst_template(defaults.postinst_template)
+                self._write_postinst_template(defaults.postinst_template)
         
         with cd(self.base_path):
             deps_str = '-d ' + ' -d '.join(self.run_deps)
@@ -219,15 +187,47 @@ class Deployment(object):
             run("rm '%s'"%filename)
             print green(os.path.basename(filename))
 
-    def write_prerm_template(self, template):
+    def _write_prerm_template(self, template):
         """Take a template prerm script and format it with appname and prerm_lines
         If you call this function you must supply a template string that includes {app_name} and {lines}."""
         self.prerm = template.format(app_name=self.app_name, lines="\n        ".join(self.prerm_lines))
 
-    def write_postinst_template(self, template):
+    def _write_postinst_template(self, template):
         """Take a template postinst script and format it with appname and postinst_lines.
         If you call this function you must supply a template string that includes {app_name} and {lines}."""
         self.postinst = template.format(app_name=self.app_name, lines="\n        ".join(self.postinst_lines))
+
+    def _clean(self):
+        """Make sure the root filesystem directory is empty."""
+        run('rm -rf "%s"'%self.root_path)
+        
+    def _sync_app(self):
+        """There is no revision control at the moment so... just copy directory over."""
+        tools.rsync([self.path+'/'],self.build_path,rsync_ignore='.rsync-ignore')
+
+    def _add_venv(self,requirements="requirements.txt"):
+        """Builds virtualenv on remote host and installs from requirements.txt.
+        
+        :param requirements: The name of the requirements.txt file.
+        """
+        self.venv_path = os.path.join(self.build_path, self.virtual)
+        run('virtualenv %s'%(self.venv_path))
+        if requirements:
+            run('PIP_DOWNLOAD_CACHE="%s" %s install -r %s'%(
+                self.arch.pip_download_cache,
+	            os.path.join(self.venv_path, 'bin/pip'),
+	            os.path.join(self.build_path, requirements))
+            )
+            
+        # venv_root is final path
+        self.venv_root = os.path.join(self.app_path, self.virtual)
+        
+        # lets make sure this venv is relinked on installation
+        self.add_postinst(['virtualenv "%s"'%self.venv_root])
+        
+        # and we have the virtualenv executable
+        self.run_deps.append('python-virtualenv')  
+
 
 
 ##

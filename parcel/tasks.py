@@ -15,7 +15,7 @@ def build():
     """Instantiate a Deployment object and build a Debian based package."""
     d = deploy.Deployment(app_name=env.app_name, build_deps=env.build_deps,
                           run_deps=env.run_deps, path=env.path, base=env.base,arch=env.arch)
-    d.clean()
+    d._clean()
     d.prepare_app()
     d.build_deb()
 
@@ -26,7 +26,7 @@ def build_for_uwsgi():
     assert hasattr(env, 'service_port'), "You need to set env.service_port"
     d = deploy.uWSGI(app_name=env.app_name, build_deps=env.build_deps,
                      run_deps=env.run_deps, path=env.path, base=env.base,arch=env.arch)
-    d.clean()
+    d._clean()
     d.prepare_app()
     d.add_supervisord_uwsgi_service(env.service_name, env.service_port)
     d.build_deb()

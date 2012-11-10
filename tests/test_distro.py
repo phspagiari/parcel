@@ -103,7 +103,7 @@ class DistroTestSuite(unittest.TestCase):
         app_name = "testapp"
         lines = []
         d = TestDeploy(app_name=app_name)
-        d.write_prerm_template(prerm_template)
+        d._write_prerm_template(prerm_template)
         self.assertEquals(d.prerm, prerm_template.format(app_name=app_name, lines="\n        ".join(lines)))
 
         # test with prerm lines
@@ -111,7 +111,7 @@ class DistroTestSuite(unittest.TestCase):
         lines = ["test line 1", "test line 2"]
         d = TestDeploy(app_name=app_name)
         d.add_prerm(lines)
-        d.write_prerm_template(prerm_template)
+        d._write_prerm_template(prerm_template)
         self.assertEquals(d.prerm, prerm_template.format(app_name=app_name, lines="\n        ".join(lines)))
 
 
@@ -123,7 +123,7 @@ class DistroTestSuite(unittest.TestCase):
         app_name = "testapp"
         lines = []
         d = TestDeploy(app_name=app_name)
-        d.write_postinst_template(postinst_template)
+        d._write_postinst_template(postinst_template)
         self.assertEquals(d.postinst, postinst_template.format(app_name=app_name, lines="\n        ".join(lines)))
 
         # test with postinst lines
@@ -131,5 +131,5 @@ class DistroTestSuite(unittest.TestCase):
         lines = ["test line 1", "test line 2"]
         d = TestDeploy(app_name=app_name)
         d.add_postinst(lines)
-        d.write_postinst_template(postinst_template)
+        d._write_postinst_template(postinst_template)
         self.assertEquals(d.postinst, postinst_template.format(app_name=app_name, lines="\n        ".join(lines)))
