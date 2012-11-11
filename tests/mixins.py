@@ -7,6 +7,7 @@ import socket, errno
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 
+
 class WebServerMixin(object):
     """Webserver test cases."""
     def startWebServer(self,port=8000):
@@ -24,6 +25,12 @@ class WebServerMixin(object):
         self.ip, self.port = self.server.server_address
         
         self.webroot = os.path.join(os.path.dirname(__file__),"data")           # serve out the data directory
+
+        # quiet down the messages from SimpleHTTPRequestHandler, remove these lines for more output
+        def log_message(self, format, *args):
+            return
+        self.server.RequestHandlerClass.log_message = log_message
+
         
         # Start a thread with the server
         def sthread():
