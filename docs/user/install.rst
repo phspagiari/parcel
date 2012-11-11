@@ -7,17 +7,12 @@ Parcel is available on the `BitBucket project page <https://bitbucket.org/retrog
 
 Clone the public repository::
 
-    $ hg clone https://bitbucket.org/retrogradeorbit/parcel
+    $ hg clone https://bitbucket.org/andrewmacgregor/parcel
     
 Once you have a copy of the source code, install it into your python environment::
 
     $ python setup.py install
     
-
-Installing with pip
---------------------
-
-
 Checking Parcel is installed
 ----------------------------
 

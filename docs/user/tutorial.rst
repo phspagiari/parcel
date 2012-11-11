@@ -51,35 +51,39 @@ Make a `fabfile.py` here and put the following in it::
         deploy.add_supervisord_uwsgi_service("mproject",port=10000)
         deploy.build_deb()
         
-Fisrt thing is we are using the uWSGI Deployment object. This is a stripped down uwsgi deployment container.
+Let's take a look at what is in this file. First thing is that we are using the uWSGI Deployment object. This is a stripped down uwsgi deployment container.
        
-Let's have a quick look at the options here. The first argument to Deployment is the package name. This will be used to
-name the binary package when it's built. The variable `base` is a path on the remote host where the package will be installed to. If this
+The first argument to Deployment is the package name. This will be used to
+name the binary package when it's built.
+
+The variable `base` is a path on the remote host that the package will be installed into. If this
 is ommitted, the install path is the home directory of the building user. If it's an absolute path (starting with /) then
 it's installed in that path. If it's a relative path like this setting, it is installed into that path relative to the
 build users home directory. So in our case it will be "~/webapps". So, for instance, if we were to build the package as
 user apache (pass `-u apache` into our fab call), then the package on debian would be installed under /var/www/webapps.
 
-The prepare_app call copies the code over and setsup the virtual env with the requirements.txt file. Then the add_supervisord_uwsgi_service
-sets the package to make a uwsgi daemon start under supervisord. This daemon will listen for web requests on port 10000 and the
-supervisor service is called 'myproject'. The final line builds the deb.
+The `prepare_app` call copies the code over to the build host and setsup the virtual env with the requirements.txt file. Then
+the `add_supervisord_uwsgi_service` sets the package to make a uwsgi daemon start under supervisord. This daemon will listen
+for web requests on port 10000 and the supervisor service is called 'myproject'. The final line builds the deb.
 
 Go ahead and build the package::
 
     $ fab -H debian deb
     
-You'll notice as the files were copied, the list of copied files is listed in blue. In this list you will see that copied across
-and build into the package is some files in your directory you don't want in there. Firstly, you don't want any local virtualenv being
+You'll notice as the files are copied they are listed in blue. In this list you will see that 
+there are some files in your directory you don't want in there. Firstly, you don't want any local virtualenv being
 copied over, as the package builds its own on the destination target. You also don't want your fabfile copied over. Once you build the
 deb, if you run the build again, `the deb file you just created would be copied over`! So lets ignore these by listing their globs
-in a file called `.rsync-ignore`. You also want to ignore this file. Edit `.rsync-ignore` and put in it the following::
+in a file called `.rsync-ignore`. You also want to ignore this file.
+
+Edit `.rsync-ignore` and put in it the following::
 
     vp
     *.deb
     fabfile*
     .rsync-ignore
     
-Now build the deb again an notice that these files are excluded from the copy::
+Now build the deb again and notice that these files are excluded from the copy::
     
     $ fab -H debian deb
     
@@ -87,14 +91,18 @@ Once it's built, you can have a look at directory structure::
 
     $ fab -H debian deb_tree:myproject_0.0.0_all.deb
     
-and more interestingly it's control files::
+and more interestingly the package's control files::
 
     $ fab -H debian deb_control:myproject_0.0.0_all.deb
     
-Now its time to test if it installs ok. Install the package on the build host as root::
+Now its time to test whether the package will install. Install the package on the build host as root::
 
     $ fab -H debian -u root deb_install:myproject_0.0.0_all.deb 
+
+Please note that this install method uses dpkg and therefore requires run dependencies to be installed before calling `deb_install`.
     
 Now point your browser at http://debian:10000/ (where debian is the hostname/ip where you installed the deb package) and you should see
-exactly what you saw from runserver locally. Congratulations! You just packaged and deployed a django application.
+exactly what you saw from runserver locally.
+
+Congratulations! You just packaged and deployed a Django application.
 

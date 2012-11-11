@@ -20,7 +20,7 @@ So for example, if your live servers were a mixture of Redhat on 64bit Intel arc
 you would have two build hosts, one Redhat 64bit and one Debian 32bit. You would then build rpms and debs of your project on 
 those respective boxes.
 
-The build hosts are specified to fabric via the -H hosts command. For example the following will build two deb packages for
+The build hosts are specified to Fabric via the -H hosts command. For example the following will build two deb packages for
 the project for two different platforms::
 
     $ fab -H debian32.localdomain,debian64.localdomain deb
@@ -44,7 +44,7 @@ Build From Source, Deploy As Binary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Parcel performs builds on the build host from source rather than binaries. Then that source is honed down into a
-package that is distributed as a binary. Rather that builds being performed using eggs, or packages, all the source is checked 
+package that is distributed as a binary. Rather than builds being performed using eggs, or packages, all the source is checked 
 out and a full source build is done. This ensures complete compatability with the deployment architecture and system arangement. 
 Once this full source build is done, the resultant compiled files are packaged.
 
