@@ -1,10 +1,10 @@
-import unittest2 as unittest
-from fabric.api import run
-
 import sys
+import unittest2 as unittest
+from mock import patch
 
 from parcel.distro import debian
 from parcel.deploy import Deployment
+from mocks import run
 
 
 class TestDeploy(Deployment):
@@ -26,15 +26,18 @@ class DistroTestSuite(unittest.TestCase):
         #restore default side_effect
         run.side_effect = self.saved_side_effect
 
+    @patch('parcel.distro.run', run)
     def test_update_packages(self):
         debian.update_packages()
         run.assert_called_once_with("apt-get update -qq")
-        
+
+    @patch('parcel.distro.run', run)
     def test_cleanup(self):
         debian._cleanup()
         self.assertEqual(run.call_count,1)
         self.assertTrue("rm -rf" in run.call_args[0][0])
 
+    @patch('parcel.distro.run', run)
     def test_setup(self):
         debian._setup()
         commands = run.call_args_list                   # get the commands run remotely in order
@@ -48,7 +51,7 @@ class DistroTestSuite(unittest.TestCase):
             
             # the classes build space should be in the path
             self.assertTrue(debian.space in command[0][0])
-        
+
     def test_check_fpm_not_present(self):
         def called(command):
             class retobj: pass
@@ -79,24 +82,16 @@ class DistroTestSuite(unittest.TestCase):
         run.side_effect = called              # return these two objects from two calls to run
         
         self.assertRaises(Exception,debian.check,())                  # should be checkinstall exception
-        
+
+    @patch('parcel.distro.run', run)        
     def test_check_everything_present(self):
         class retobj: pass
         retval = retobj()
         retval.return_code = 0
-            
         run.return_value = retval              # return these two objects from two calls to run
-        
         debian.check()
-        
     
     def test_write_prerm_template(self):
-
-        # override __init__ so we are not calling remote host
-        class TestDeploy(Deployment):
-            def __init__(self, app_name=None):
-                self.app_name = app_name
-
         prerm_template = "Test rm template {app_name} and {lines}"
 
         # test with no prerm lines
@@ -114,7 +109,7 @@ class DistroTestSuite(unittest.TestCase):
         d._write_prerm_template(prerm_template)
         self.assertEquals(d.prerm, prerm_template.format(app_name=app_name, lines="\n        ".join(lines)))
 
-
+    @patch('parcel.distro.run', run)
     def test_write_postinst_template(self):
 
         postinst_template = "Test postint template {app_name} and {lines}"
