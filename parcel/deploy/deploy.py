@@ -4,10 +4,10 @@ import os.path
 from fabric.api import settings, run, cd, lcd, put, get, local, env, with_settings
 from fabric.colors import green
 
-from . import versions
-from . import distro
-from . import tools
-from . import defaults
+from .. import versions
+from .. import distro
+from .. import tools
+from .. import defaults
 
 class Deployment(object):
     """The core :class:`Deployment <Deployment>` object. All Fabric tasks built with
