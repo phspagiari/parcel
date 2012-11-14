@@ -100,7 +100,7 @@ class Deployment(object):
         while remotepath[0]=='/':
             remotepath=remotepath[1:]
         put(localfile,os.path.join(self.root_path,remotepath))
-        
+
     def add_data_to_root_fs(self, data, remotepath):
         """Copies data in file on remotepath (relative to final root)"""
         while remotepath[0]=='/':
@@ -139,9 +139,9 @@ class Deployment(object):
         # add install and remove templates, use defaults if not supplied
         if templates:
             if not self.prerm:
-                self._write_prerm_template(defaults.prerm_template)
+                self.write_prerm_template(defaults.prerm_template)
             if not self.postinst:
-                self._write_postinst_template(defaults.postinst_template)
+                self.write_postinst_template(defaults.postinst_template)
         
         with cd(self.base_path):
             deps_str = '-d ' + ' -d '.join(self.run_deps)
@@ -187,13 +187,13 @@ class Deployment(object):
             run("rm '%s'"%filename)
             print green(os.path.basename(filename))
 
-    def _write_prerm_template(self, template):
+    def write_prerm_template(self, template):
         """Take a template prerm script and format it with appname and prerm_lines
         If you call this function you must supply a template string that includes {app_name} and {lines}."""
         self.prerm = template.format(app_name=self.app_name, lines="\n        ".join(self.prerm_lines))
 
-    def _write_postinst_template(self, template):
-        """Take a template postinst script and format it with appname and postinst_lines.
+    def write_postinst_template(self, template):
+        """Take a template postinst script and format it with appname and postinst_lines
         If you call this function you must supply a template string that includes {app_name} and {lines}."""
         self.postinst = template.format(app_name=self.app_name, lines="\n        ".join(self.postinst_lines))
 
