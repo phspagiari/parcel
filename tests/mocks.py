@@ -1,8 +1,12 @@
 import mock
 
 # fabric.api
-settings = mock.MagicMock(name='settings')
 run = mock.MagicMock(name='run')
+rsync = mock.MagicMock(name='rsync')
+
+settings = mock.MagicMock(name='settings')
+
+
 cd = mock.MagicMock(name='cd')
 lcd = mock.MagicMock(name='lcd')
 put = mock.MagicMock(name='put')
@@ -17,3 +21,5 @@ blue = mock.MagicMock(name='blue')
 
 # fabric.contrib.files
 append = mock.MagicMock(name="append")
+
+
