@@ -35,7 +35,7 @@ class Deployment(object):
         #: The architecture of the build host. This should be a :class:`Distro <Distro>` object. 
         self.arch = arch
         remotehome = run('echo $HOME').strip()
-        
+
         # if path isn't set, make it the home directory of the build user
         if base is None:
             base = remotehome
@@ -76,7 +76,8 @@ class Deployment(object):
         
         # the build path
         self.build_path = os.path.join(self.root_path, self.app_path[1:])                # cut the first / off app_path
-            
+
+        print "ROOT_PATH", self.root_path
         print "BASE_PATH",self.base_path
         print "APP PATH",self.app_path
         print "BUILD PATH",self.build_path
@@ -212,7 +213,7 @@ class Deployment(object):
         """
         self.venv_path = os.path.join(self.build_path, self.virtual)
         run('virtualenv %s'%(self.venv_path))
-        if requirements:
+        if requirements and os.path.exists(requirements):
             run('PIP_DOWNLOAD_CACHE="%s" %s install -r %s'%(
                 self.arch.pip_download_cache,
 	            os.path.join(self.venv_path, 'bin/pip'),
