@@ -22,14 +22,12 @@ def rsync(sources,dest,rsync_ignore=None,color_files=True):
     if type(sources)==str:
         sources = [sources]
     run('mkdir -p "%s"'%dest)
-    
-    command =   [   'rsync',
-                    '-av',
-                ] + [
-                 "'%s'"%s for s in sources
-                ] + [
-                    "'%s@%s:%s'"%(env.user,env.host,dest)
-                ]
+
+    command = []
+    command.append('rsync')
+    command.append('-av')
+    command.extend("'%s'"%s for s in sources)
+    command.append("'%s@%s:%s'"%(env.user,env.host,dest))
                 
     if rsync_ignore:
         if os.path.isfile(rsync_ignore):
