@@ -7,6 +7,7 @@ from mock import patch
 
 from parcel.deploy import Deployment
 from parcel.distro import Debian
+from parcel.versions import Version
 from parcel_mocks import run, local, rsync, version_mock, update_packages, build_deps
 
 # add mocks to this list if they should have reset called on them after tests
@@ -97,14 +98,6 @@ class DeployTestSuite(unittest.TestCase):
 
 
 
-
-
-
-
-
-
-
-
 class DeployTestSuite2(unittest.TestCase):
 
     def setUp(self):
@@ -116,54 +109,62 @@ class DeployTestSuite2(unittest.TestCase):
 
 
     @patch('parcel.deploy.deploy.run', local)
-    @patch('parcel.tools.run' , local)
-    @patch('parcel.tools.rsync', rsync)    
+    @patch.multiple('parcel.tools', run=local, rsync=rsync)
     @patch('parcel.distro.run', local)
-    @patch('parcel.distro.Debian.version', version_mock)
-    @patch('parcel.distro.Debian.update_packages', update_packages)
-    @patch('parcel.distro.Debian.build_deps', build_deps)    
-    def test_prepare_app_no_deps(self):
-
+    @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
+    def test_init(self):
         basepath = os.path.join(os.path.expanduser('~/'))
-
         d = Deployment('testapp', base=basepath)
-        d.prepare_app()
+
+        # version
+        self.assertEquals(d.version.version, Version('0.1.2').version)
+
+        # app_name
+        self.assertEquals(d.app_name, 'testapp')
 
         # check that that a build_dir has been set up
         build_dir = os.path.join(basepath, d.build_dir)
         self.assertTrue(os.path.exists(build_dir))
 
-        # check that sync_app worked
-        self.assertTrue(os.path.exists(d.build_path))        
-
-##         ROOT_PATH /home/andrew/.parcel/root
-## BASE_PATH /home/andrew/.parcel
-## APP PATH /home/andrew/testapp-0.1.2
-
-
         # no deps to install
         self.assertFalse(build_deps.called)
 
-        # update_packages should have been called
+        # update_packages
         update_packages.assert_called_once()
 
 
     @patch('parcel.deploy.deploy.run', local)
-    @patch('parcel.tools.run' , local)
-    @patch('parcel.tools.rsync', rsync)    
+    @patch.multiple('parcel.tools', run=local, rsync=rsync)
     @patch('parcel.distro.run', local)
-    @patch('parcel.distro.Debian.version', version_mock)
-    @patch('parcel.distro.Debian.update_packages', update_packages)
-    @patch('parcel.distro.Debian.build_deps', build_deps)    
-    def test_prepare_app_with_deps(self):
+    @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
+    def test_init_with_deps(self):
 
         basepath = os.path.join(os.path.expanduser('~/'))
-
         d = Deployment('testapp', base=basepath, build_deps=['requests'])
         d.prepare_app()
 
+        # if we supply build_deps then this should be called
         build_deps.assert_called_once()
-        update_packages.assert_called_once()
+
+
+    @patch('parcel.deploy.deploy.run', local)
+    @patch.multiple('parcel.tools', run=local, rsync=rsync)
+    @patch('parcel.distro.run', local)
+    @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
+    def test_prepare_app(self):
+
+        basepath = os.path.join(os.path.expanduser('~/'))
+        d = Deployment('testapp', base=basepath)
+        d.prepare_app()
+
+        # check that sync_app worked
+        self.assertTrue(os.path.exists(d.build_path))
+
+        # check that virtualenv was built
+        ve_path = os.path.join(d.build_path, d.virtual)
+        self.assertTrue(os.path.exists(ve_path))
+
+
 
 
 
