@@ -4,7 +4,7 @@ from mock import patch
 
 from parcel.distro import debian
 from parcel.deploy import Deployment
-from mocks import run
+from parcel_mocks import run
 
 
 class TestDeploy(Deployment):

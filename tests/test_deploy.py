@@ -1,14 +1,17 @@
 import sys
+import os
 import unittest2 as unittest
+
 import mock
 from mock import patch
 
 from parcel.deploy import Deployment
 from parcel.distro import Debian
-from parcel.versions import Version
-from mocks import run, rsync
+from parcel_mocks import run, local, rsync, version_mock, update_packages, build_deps
 
-version_mock = mock.Mock(spec=Version)
+# add mocks to this list if they should have reset called on them after tests
+mocks_to_reset = [version_mock, update_packages, build_deps]
+
 
 
 class TestDeploy(Deployment):
@@ -23,7 +26,8 @@ class DeployTestSuite(unittest.TestCase):
         pass
 
     def tearDown(self):
-        run.reset_mock()
+        for m in mocks_to_reset:
+            m.reset_mock()
         
 
     def test_write_prerm_template(self):
@@ -64,33 +68,102 @@ class DeployTestSuite(unittest.TestCase):
         self.assertEquals(d.postinst, postinst_template.format(app_name=app_name, lines="\n        ".join(lines)))
 
 
+    def test_add_to_root_fs(self):
+        pass
+
+    def test_add_data_to_root_fs(self):
+        pass
+
+    def test_compile_python(self):
+        pass
+
+    def test_clear_py_files(self):
+        pass
+
+    def test_add_prerm(self):
+        pass
+
+    def test_add_postrm(self):
+        pass
+
+    def test_add_preinst(self):
+        pass
+
+    def test_add_postinst(self):
+        pass
+
+    def test_build_deb(self):
+        pass
+
+
+
+
+
+
+
+
+
+
 
 class DeployTestSuite2(unittest.TestCase):
 
     def setUp(self):
-        self.saved_side_effect = run.side_effect
-        run.reset_mock()
-
+        pass
+    
     def tearDown(self):
-        run.reset_mock()
-        
-        #restore default side_effect
-        run.side_effect = self.saved_side_effect
+        for m in mocks_to_reset:
+            m.reset_mock()
 
-    @patch('parcel.deploy.deploy.run', mock.MagicMock(name="run"))
-    @patch('parcel.tools.run' , mock.MagicMock(name="run"))
+
+    @patch('parcel.deploy.deploy.run', local)
+    @patch('parcel.tools.run' , local)
     @patch('parcel.tools.rsync', rsync)    
-    @patch('parcel.distro.run', mock.MagicMock(name="run"))
-    @patch('parcel.distro.Debian.version', mock.MagicMock(name="version"))
-    def test_prepare_app(self):
-        
-        d = Deployment('testapp')
-        ## d. arch = Debian()
+    @patch('parcel.distro.run', local)
+    @patch('parcel.distro.Debian.version', version_mock)
+    @patch('parcel.distro.Debian.update_packages', update_packages)
+    @patch('parcel.distro.Debian.build_deps', build_deps)    
+    def test_prepare_app_no_deps(self):
 
-        ## d.path ="."
-        ## d.build_path = 'build'
+        basepath = os.path.join(os.path.expanduser('~/'))
+
+        d = Deployment('testapp', base=basepath)
         d.prepare_app()
-        #run.assert_called_once_with("apt-get update -qq")
+
+        # check that that a build_dir has been set up
+        build_dir = os.path.join(basepath, d.build_dir)
+        self.assertTrue(os.path.exists(build_dir))
+
+        # check that sync_app worked
+        self.assertTrue(os.path.exists(d.build_path))        
+
+##         ROOT_PATH /home/andrew/.parcel/root
+## BASE_PATH /home/andrew/.parcel
+## APP PATH /home/andrew/testapp-0.1.2
+
+
+        # no deps to install
+        self.assertFalse(build_deps.called)
+
+        # update_packages should have been called
+        update_packages.assert_called_once()
+
+
+    @patch('parcel.deploy.deploy.run', local)
+    @patch('parcel.tools.run' , local)
+    @patch('parcel.tools.rsync', rsync)    
+    @patch('parcel.distro.run', local)
+    @patch('parcel.distro.Debian.version', version_mock)
+    @patch('parcel.distro.Debian.update_packages', update_packages)
+    @patch('parcel.distro.Debian.build_deps', build_deps)    
+    def test_prepare_app_with_deps(self):
+
+        basepath = os.path.join(os.path.expanduser('~/'))
+
+        d = Deployment('testapp', base=basepath, build_deps=['requests'])
+        d.prepare_app()
+
+        build_deps.assert_called_once()
+        update_packages.assert_called_once()
 
 
 
