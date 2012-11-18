@@ -8,12 +8,11 @@ from mock import patch
 from parcel.deploy import Deployment
 from parcel.distro import Debian
 from parcel.versions import Version
-from parcel_mocks import run, local, rsync, version_mock, update_packages, build_deps, mock_put
+from parcel_mocks import (run, local, rsync, version_mock, update_packages,
+                          build_deps, mock_put, mock_get, lcd)
 
 # add mocks to this list if they should have reset called on them after tests
 mocks_to_reset = [version_mock, update_packages, build_deps]
-
-
 
 class TestDeploy(Deployment):
     """Simple test class for deploytment which  overrides __init__ so we are not calling remote host"""
@@ -88,12 +87,7 @@ class DeployTestSuite(unittest.TestCase):
         self.assertEquals(self.deploy.postinst, postinst_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
 
 
-    def test_build_deb(self):
-        pass
-
-
-
-class DeployTestSuite2(unittest.TestCase):
+class DeployTestSuite_AppBuild(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -101,7 +95,11 @@ class DeployTestSuite2(unittest.TestCase):
     def tearDown(self):
         for m in mocks_to_reset:
             m.reset_mock()
-
+            
+        # remove the deb we may have built
+        deb = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
+        if os.path.exists(deb):
+            os.unlink(deb)
 
     @patch('parcel.deploy.deploy.run', local)
     @patch.multiple('parcel.tools', run=local, rsync=rsync)
@@ -160,7 +158,7 @@ class DeployTestSuite2(unittest.TestCase):
         self.assertTrue(os.path.exists(ve_path))
 
 
-    @patch.multiple('parcel.deploy.deploy', run=local, put=mock_put)
+    @patch.multiple('parcel.deploy.deploy', run=local, put=mock_put, cd=lcd, get=mock_get)
     @patch.multiple('parcel.tools', run=local, rsync=rsync, put=mock_put)
     @patch('parcel.distro.run', local)
     @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
@@ -201,3 +199,7 @@ class DeployTestSuite2(unittest.TestCase):
         dest_file = os.path.join(d.build_path, 'data', 'hello.py')
         self.assertFalse(os.path.exists(dest_file))
         
+        d.build_deb()
+        dest_file = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
+        self.assertTrue(os.path.exists(dest_file))
+
