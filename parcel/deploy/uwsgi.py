@@ -65,7 +65,3 @@ module = %s
 home = %s
 """%(port,path,self.app_name,module,self.venv_root)
         self.add_data_to_root_fs(data,'/etc/uwsgi/%s.uswgi'%program_name)
-        
-        
-        
-        
