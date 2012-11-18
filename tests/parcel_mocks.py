@@ -1,7 +1,8 @@
 import os
-import mock
+import shutil
 from functools import partial
 
+import mock
 from fabric.colors import blue
 from fabric.api import local
 
@@ -11,6 +12,11 @@ from parcel.versions import Version
 # fabric.api
 run = mock.MagicMock(name='run')
 local = partial(local, capture=True)
+
+def mock_put(local_path=None, remote_path=None, use_sudo=False, mirror_local_mode=False, mode=None):
+    if local_path and remote_path:
+        shutil.copy(local_path, remote_path)
+
 
 # fabric.colors
 green = mock.MagicMock(name='green')
