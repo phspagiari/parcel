@@ -141,6 +141,10 @@ class Deployment(object):
         if templates:
             if not self.prerm:
                 self.write_prerm_template(defaults.prerm_template)
+            if not self.postrm:
+                self.write_postrm_template(defaults.postrm_template)
+            if not self.preinst:
+                self.write_preinst_template(defaults.preinst_template)
             if not self.postinst:
                 self.write_postinst_template(defaults.postinst_template)
         
@@ -192,6 +196,16 @@ class Deployment(object):
         """Take a template prerm script and format it with appname and prerm_lines
         If you call this function you must supply a template string that includes {app_name} and {lines}."""
         self.prerm = template.format(app_name=self.app_name, lines="\n        ".join(self.prerm_lines))
+
+    def write_postrm_template(self, template):
+        """Take a template postrm script and format it with appname and postrm_lines
+        If you call this function you must supply a template string that includes {app_name} and {lines}."""
+        self.postrm = template.format(app_name=self.app_name, lines="\n        ".join(self.postrm_lines))
+
+    def write_preinst_template(self, template):
+        """Take a template preinst script and format it with appname and preinst_lines
+        If you call this function you must supply a template string that includes {app_name} and {lines}."""
+        self.preinst = template.format(app_name=self.app_name, lines="\n        ".join(self.preinst_lines))
 
     def write_postinst_template(self, template):
         """Take a template postinst script and format it with appname and postinst_lines
