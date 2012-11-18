@@ -110,11 +110,13 @@ class Deployment(object):
             
     def compile_python(self):
         # compile all python (with virtual python)
-        run('%s -c "import compileall;compileall.compile_dir(\'%s\', force=1)"'%(os.path.join(self.venv_path, 'bin/python'),self.app_path))
+        vpython_path = os.path.join(self.venv_path,'bin/python')
+        command = '%s -c "import compileall;compileall.compile_dir(\'%s\', force=1)"'%(vpython_path, self.build_path)
+        run(command)
 
     def clear_py_files(self):
         # clear all .py files
-        run('find "%s" -name "*.py" -exec rm {} \;'%(self.app_path))
+        run('find "%s" -name "*.py" -exec rm {} \;'%(self.build_path))
 
     def add_prerm(self, lines):
         """Add lines to the prerm file"""
