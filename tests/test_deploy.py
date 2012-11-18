@@ -87,12 +87,6 @@ class DeployTestSuite(unittest.TestCase):
         self.deploy.write_postinst_template(postinst_template)
         self.assertEquals(self.deploy.postinst, postinst_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
 
-    def test_compile_python(self):
-        pass
-
-    def test_clear_py_files(self):
-        pass
-
 
     def test_build_deb(self):
         pass
@@ -196,4 +190,14 @@ class DeployTestSuite2(unittest.TestCase):
         self.assertTrue(os.path.exists(dest_file))
         with open(dest_file) as f:
             self.assertEquals(data, f.read())
-            
+
+        # check we can compile python files
+        d.compile_python()
+        dest_file = os.path.join(d.build_path, 'data', 'hello.pyc')
+        self.assertTrue(os.path.exists(dest_file))
+
+        # check we can clear .py and just leave .pyc files
+        d.clear_py_files()
+        dest_file = os.path.join(d.build_path, 'data', 'hello.py')
+        self.assertFalse(os.path.exists(dest_file))
+        
