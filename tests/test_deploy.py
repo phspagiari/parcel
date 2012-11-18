@@ -8,7 +8,7 @@ from mock import patch
 from parcel.deploy import Deployment
 from parcel.distro import Debian
 from parcel.versions import Version
-from parcel_mocks import run, local, rsync, version_mock, update_packages, build_deps
+from parcel_mocks import run, local, rsync, version_mock, update_packages, build_deps, mock_put
 
 # add mocks to this list if they should have reset called on them after tests
 mocks_to_reset = [version_mock, update_packages, build_deps]
@@ -24,56 +24,68 @@ class TestDeploy(Deployment):
 class DeployTestSuite(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.app_name = "testapp"
+        self.deploy = TestDeploy(self.app_name)
 
     def tearDown(self):
         for m in mocks_to_reset:
             m.reset_mock()
         
-
     def test_write_prerm_template(self):
         prerm_template = "Test rm template {app_name} and {lines}"
 
         # test with no prerm lines
-        app_name = "testapp"
         lines = []
-        d = TestDeploy(app_name)
-        d.write_prerm_template(prerm_template)
-        self.assertEquals(d.prerm, prerm_template.format(app_name=app_name, lines="\n        ".join(lines)))
+        self.deploy.write_prerm_template(prerm_template)
+        self.assertEquals(self.deploy.prerm, prerm_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
 
         # test with prerm lines
-        app_name = "testapp"
         lines = ["test line 1", "test line 2"]
-        d = TestDeploy(app_name)
-        d.add_prerm(lines)
-        d.write_prerm_template(prerm_template)
-        self.assertEquals(d.prerm, prerm_template.format(app_name=app_name, lines="\n        ".join(lines)))
+        self.deploy.add_prerm(lines)
+        self.deploy.write_prerm_template(prerm_template)
+        self.assertEquals(self.deploy.prerm, prerm_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
+
+    def test_write_postrm_template(self):
+        postrm_template = "Test rm template {app_name} and {lines}"
+
+        # test with no postrm lines
+        lines = []
+        self.deploy.write_postrm_template(postrm_template)
+        self.assertEquals(self.deploy.postrm, postrm_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
+
+        # test with postrm lines
+        lines = ["test line 1", "test line 2"]
+        self.deploy.add_postrm(lines)
+        self.deploy.write_postrm_template(postrm_template)
+        self.assertEquals(self.deploy.postrm, postrm_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
+
+    def test_write_preinst_template(self):
+        preinst_template = "Test postint template {app_name} and {lines}"
+
+        # test with no preinst lines
+        lines = []
+        self.deploy.write_preinst_template(preinst_template)
+        self.assertEquals(self.deploy.preinst, preinst_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
+
+        # test with preinst lines
+        lines = ["test line 1", "test line 2"]
+        self.deploy.add_preinst(lines)
+        self.deploy.write_preinst_template(preinst_template)
+        self.assertEquals(self.deploy.preinst, preinst_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
 
     def test_write_postinst_template(self):
-
         postinst_template = "Test postint template {app_name} and {lines}"
 
         # test with no postinst lines
-        app_name = "testapp"
         lines = []
-        d = TestDeploy(app_name)
-        d.write_postinst_template(postinst_template)
-        self.assertEquals(d.postinst, postinst_template.format(app_name=app_name, lines="\n        ".join(lines)))
+        self.deploy.write_postinst_template(postinst_template)
+        self.assertEquals(self.deploy.postinst, postinst_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
 
         # test with postinst lines
-        app_name = "testapp"
         lines = ["test line 1", "test line 2"]
-        d = TestDeploy(app_name=app_name)
-        d.add_postinst(lines)
-        d.write_postinst_template(postinst_template)
-        self.assertEquals(d.postinst, postinst_template.format(app_name=app_name, lines="\n        ".join(lines)))
-
-
-    def test_add_to_root_fs(self):
-        pass
-
-    def test_add_data_to_root_fs(self):
-        pass
+        self.deploy.add_postinst(lines)
+        self.deploy.write_postinst_template(postinst_template)
+        self.assertEquals(self.deploy.postinst, postinst_template.format(app_name=self.app_name, lines="\n        ".join(lines)))
 
     def test_compile_python(self):
         pass
@@ -81,17 +93,6 @@ class DeployTestSuite(unittest.TestCase):
     def test_clear_py_files(self):
         pass
 
-    def test_add_prerm(self):
-        pass
-
-    def test_add_postrm(self):
-        pass
-
-    def test_add_preinst(self):
-        pass
-
-    def test_add_postinst(self):
-        pass
 
     def test_build_deb(self):
         pass
@@ -165,6 +166,34 @@ class DeployTestSuite2(unittest.TestCase):
         self.assertTrue(os.path.exists(ve_path))
 
 
+    @patch.multiple('parcel.deploy.deploy', run=local, put=mock_put)
+    @patch.multiple('parcel.tools', run=local, rsync=rsync, put=mock_put)
+    @patch('parcel.distro.run', local)
+    @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
+    def test_deployment(self):
 
+        basepath = os.path.join(os.path.expanduser('~/'))
+        d = Deployment('testapp', base=basepath)
+        d.prepare_app()
 
+        # check that sync_app worked
+        self.assertTrue(os.path.exists(d.build_path))
 
+        # check that virtualenv was built
+        ve_path = os.path.join(d.build_path, d.virtual)
+        self.assertTrue(os.path.exists(ve_path))
+
+        # check we can add a file
+        test_file = os.path.join(os.path.dirname(__file__),"data", "tip.tar.gz")
+        d.add_to_root_fs(test_file, 'tip.tar.gz')
+        dest_file = os.path.join(d.root_path, "tip.tar.gz")
+        self.assertTrue(os.path.exists(dest_file))
+
+        # check we can add data
+        data = "this is some test data"
+        d.add_data_to_root_fs(data, "test_data.txt")
+        dest_file = os.path.join(d.root_path, "test_data.txt")
+        self.assertTrue(os.path.exists(dest_file))
+        with open(dest_file) as f:
+            self.assertEquals(data, f.read())
+            
