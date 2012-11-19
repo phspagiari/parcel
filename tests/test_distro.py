@@ -1,10 +1,15 @@
 import sys
 import unittest2 as unittest
-from mock import patch
+
+from mock import patch, MagicMock
 
 from parcel.distro import debian
 from parcel.deploy import Deployment
-from parcel_mocks import run
+
+from parcel_mocks import run, _AttributeString, version_run, with_settings
+
+# add mocks to this list if they should have reset called on them after tests
+mocks_to_reset = [run, version_run, with_settings]
 
 
 class TestDeploy(Deployment):
@@ -17,14 +22,36 @@ class DistroTestSuite(unittest.TestCase):
     """Versions test cases."""
 
     def setUp(self):
-        self.saved_side_effect = run.side_effect
-        run.reset_mock()
-        
+        pass
+    
     def tearDown(self):
-        run.reset_mock()
-        
-        #restore default side_effect
-        run.side_effect = self.saved_side_effect
+        for m in mocks_to_reset:
+            m.reset_mock()
+
+    @patch('parcel.distro.run', run)
+    def test_build_deps(self):
+        deps = ['test_dep0', 'test_dep1']
+        debian.build_deps(deps)
+        run.assert_called_once_with("apt-get install -qq %s"%(' '.join(deps)))
+
+    @patch('parcel.distro.run', version_run)
+    def test_version(self):
+        out = _AttributeString("0.5.1")
+        out.return_code = 0
+        version_run.return_value = out
+        ret = debian.version('test_pkg')
+        version_run.assert_called_once_with('apt-cache show %s 2>/dev/null | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%('test_pkg'))
+        self.assertEqual(str(ret), "0.5.1")
+
+    @patch('parcel.distro.run', version_run)
+    def test_version_not_found(self):
+        out = _AttributeString("")
+        out.return_code = 1
+        version_run.return_value = out
+        ret = debian.version('test_pkg')
+        version_run.assert_called_once_with('apt-cache show %s 2>/dev/null | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%('test_pkg'))
+        self.assertEqual(ret, None)
+
 
     @patch('parcel.distro.run', run)
     def test_update_packages(self):
@@ -38,7 +65,7 @@ class DistroTestSuite(unittest.TestCase):
         self.assertTrue("rm -rf" in run.call_args[0][0])
 
     @patch('parcel.distro.run', run)
-    def test_setup(self):
+    def test_internal_setup(self):
         debian._setup()
         commands = run.call_args_list                   # get the commands run remotely in order
         

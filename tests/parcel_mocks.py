@@ -14,6 +14,7 @@ from parcel.versions import Version
 run = mock.MagicMock(name='run')
 local = partial(local, capture=True)
 cd = lcd
+with_settings = mock.MagicMock(name="with_settings")
 
 def mock_put(local_path=None, remote_path=None, use_sudo=False, mirror_local_mode=False, mode=None):
     base_path = os.path.join(os.path.expanduser('~/'), Deployment.build_dir)
@@ -24,6 +25,7 @@ def mock_get(remote_path, local_path=None):
     if remote_path and local_path:
         shutil.copy(remote_path, local_path)
 
+version_run = mock.MagicMock(name="version_run")  # used in test_distro
 
 # fabric.colors
 green = mock.MagicMock(name='green')
@@ -100,3 +102,12 @@ def rsync(sources,dest,rsync_ignore=None,color_files=True):
         i+=1
     for line in lines[i:]:
         print line     
+
+# from fabric code, used to allow arbitrary attribute access
+class _AttributeString(str):
+    """
+    Simple string subclass to allow arbitrary attribute access.
+    """
+    @property
+    def stdout(self):
+        return str(self)
