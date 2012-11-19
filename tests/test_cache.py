@@ -51,7 +51,7 @@ class CacheTestSuite(unittest.TestCase, WebServerMixin):
         # make a cache with it
         cache = FileCache(self.path)
         
-        # director should exist
+        # directory should exist
         self.assertTrue(os.path.isdir(self.path))
         
         # directory should be empty
@@ -66,12 +66,14 @@ class CacheTestSuite(unittest.TestCase, WebServerMixin):
         
         # get test tarball
         path = cache.get("http://localhost:%d/tip.tar.gz"%self.port)
-        
-        self.assertTrue('tip.tar.gz' in os.listdir(self.path))          # make sure file is in cache
-        self.assertEquals(path, os.path.join(self.path,'tip.tar.gz'))   # make sure thats what was returned
+
+        self.assertTrue(cache.is_cached('tip.tar.gz'))  # check it reports file as cached
+        self.assertTrue('tip.tar.gz' in os.listdir(self.path))  # make sure file is in cache
+        self.assertEquals(path, os.path.join(self.path,'tip.tar.gz'))  # make sure thats what was returned
+
+        # get it again to exercise cache
+        path = cache.get("http://localhost:%d/tip.tar.gz"%self.port)
         
         self.stopWebServer()
         
-    def test_is_cached(self):
-        pass
         
