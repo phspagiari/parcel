@@ -1,4 +1,6 @@
 import os
+import errno
+
 from parcel.tools import dl
 
 class FileCache(object):
@@ -11,7 +13,7 @@ class FileCache(object):
         try:
             os.makedirs(self.cache_dir)
         except OSError, ose:
-            if ose.errno==17:
+            if ose.errno==errno.EEXIST:
                 pass
             else:
                 raise ose
