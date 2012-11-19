@@ -6,6 +6,7 @@ import mock
 from fabric.colors import blue
 from fabric.api import local, lcd
 
+from parcel.deploy import Deployment
 from parcel.versions import Version
 
 
@@ -15,8 +16,9 @@ local = partial(local, capture=True)
 cd = lcd
 
 def mock_put(local_path=None, remote_path=None, use_sudo=False, mirror_local_mode=False, mode=None):
+    base_path = os.path.join(os.path.expanduser('~/'), Deployment.build_dir)
     if local_path and remote_path:
-        shutil.copy(local_path, remote_path)
+        shutil.copy(local_path, os.path.join(base_path, remote_path))
 
 def mock_get(remote_path, local_path=None):
     if remote_path and local_path:
