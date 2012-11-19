@@ -17,8 +17,14 @@ class VersionTestSuite(unittest.TestCase):
         for v,nv in __TEST_DATA__:
             self.assertEqual( Version(v).next().version, nv)
 	
+    def test_empty_initial_value(self):
+        for v, nv in [(None,"0.0.1"), ("","0.0.1")]:
+            self.assertEqual( str(Version(v)), "0.0.0")
+            self.assertEqual( Version(v).next().version, nv)
+
 
 # example versions from distutils.versions docs plus a few more
+# (input, expected_outut)
 __TEST_DATA__ = [
     ("0.4","0.5"),
     ("0.4.0","0.4.1"),
