@@ -1,5 +1,6 @@
 import os
 import shutil
+import tempfile
 from functools import partial
 
 import mock
@@ -26,6 +27,18 @@ def mock_get(remote_path, local_path=None):
         shutil.copy(remote_path, local_path)
 
 version_run = mock.MagicMock(name="version_run")  # used in test_distro
+
+# used in test_deploy for test_build_deb
+def build_deb_local():
+    def func(command):
+        if command.startswith('fpm'):
+            tmpdir = tempfile.mkdtemp()
+            test_deb = os.path.join(os.path.dirname(__file__),"data", "test.deb")
+            deb = os.path.join(tmpdir, 'testapp_0.1.2_all.deb')
+            shutil.copy(test_deb, deb)
+            return 'Created deb package {{"path":"{0}"}}'.format(deb)
+        return local(command)
+    return func
 
 # fabric.colors
 green = mock.MagicMock(name='green')

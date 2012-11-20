@@ -1,7 +1,7 @@
 import sys
 import os
 import unittest2 as unittest
-
+from functools import partial
 import mock
 from mock import patch
 
@@ -9,10 +9,11 @@ from parcel.deploy import Deployment
 from parcel.distro import Debian
 from parcel.versions import Version
 from parcel_mocks import (run, local, rsync, version_mock, update_packages,
-                          build_deps, mock_put, mock_get, lcd)
+                          build_deps, mock_put, mock_get, lcd, build_deb_local)
 
 # add mocks to this list if they should have reset called on them after tests
 mocks_to_reset = [version_mock, update_packages, build_deps]
+
 
 class TestDeploy(Deployment):
     """Simple test class for deploytment which  overrides __init__ so we are not calling remote host"""
@@ -198,8 +199,17 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
         d.clear_py_files()
         dest_file = os.path.join(d.build_path, 'data', 'hello.py')
         self.assertFalse(os.path.exists(dest_file))
-        
+
+
+    @patch.multiple('parcel.deploy.deploy', run=build_deb_local(), put=mock_put, cd=lcd, get=mock_get)
+    @patch.multiple('parcel.tools', run=local, rsync=rsync, put=mock_put)
+    @patch('parcel.distro.run', local)
+    @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
+    def test_build_deb(self):
+
+        basepath = os.path.join(os.path.expanduser('~/'))
+        d = Deployment('testapp', base=basepath)
+        d.root_path = os.path.join(basepath, '.parcel')
         d.build_deb()
         dest_file = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
         self.assertTrue(os.path.exists(dest_file))
-
