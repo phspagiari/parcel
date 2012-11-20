@@ -3,6 +3,7 @@ import sys, os
 
 from parcel.cache import FileCache
 from mixins import WebServerMixin
+from mock import MagicMock, patch
 
 ##
 ## Some functions to help building and clearing a directory
@@ -14,6 +15,9 @@ def mkdir():
     
 def rmdir(path):
     shutil.rmtree(path)
+
+mock_makedirs = MagicMock(name="mock_makedirs")
+mock_makedirs.side_effect = OSError(2, 'Test exception', 'test')
 
 ##
 ## Test Suite
@@ -75,5 +79,11 @@ class CacheTestSuite(unittest.TestCase, WebServerMixin):
         path = cache.get("http://localhost:%d/tip.tar.gz"%self.port)
         
         self.stopWebServer()
-        
-        
+
+    @patch('os.makedirs', mock_makedirs)
+    def test_oserror_path(self):
+        self.path = mkdir()
+        with self.assertRaises(OSError):
+            cache = FileCache(self.path)
+        mock_makedirs.assert_called_once(self.path)
+
