@@ -260,10 +260,9 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
         os.unlink(dest_file)
 
 
-    @patch.multiple('parcel.deploy.deploy', run=run, put=mock_put, cd=lcd, get=mock_get)
-    @patch.multiple('parcel.tools', run=local, rsync=rsync, put=mock_put)
+    @patch('parcel.deploy.deploy.run', run)
     @patch('parcel.distro.run', local)
-    @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
+    @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages)
     def test_add_venv_with_requirements(self):
 
         basepath = os.path.join(os.path.expanduser('~/'))
