@@ -128,9 +128,6 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
 
         # now check with no basepath
         d = Deployment('testapp')
-        print d.base_path
-        print build_dir
-        assert False
 
     @patch('parcel.deploy.deploy.run', local)
     @patch.multiple('parcel.tools', run=local, rsync=rsync)
