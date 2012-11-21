@@ -2,6 +2,8 @@ syntax: glob
 build/*
 dist/*
 parcel.egg-info/*
+tests/data/cover*
+.coverage
 
 syntax: regexp
 
