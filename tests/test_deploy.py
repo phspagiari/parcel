@@ -126,6 +126,11 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
         # update_packages
         update_packages.assert_called_once()
 
+        # now check with no basepath
+        d = Deployment('testapp')
+        print d.base_path
+        print build_dir
+        assert False
 
     @patch('parcel.deploy.deploy.run', local)
     @patch.multiple('parcel.tools', run=local, rsync=rsync)
@@ -210,6 +215,30 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
         basepath = os.path.join(os.path.expanduser('~/'))
         d = Deployment('testapp', base=basepath)
         d.root_path = os.path.join(basepath, '.parcel')
+
+        # test build, will not actually call fpm
         d.build_deb()
         dest_file = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
         self.assertTrue(os.path.exists(dest_file))
+        os.unlink(dest_file)
+
+        # now do it without templates to exercise those paths
+        d = Deployment('testapp', base=basepath)
+        d.root_path = os.path.join(basepath, '.parcel')
+        d.build_deb(templates=False)
+        dest_file = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
+        self.assertTrue(os.path.exists(dest_file))
+        os.unlink(dest_file)
+
+        # now set some prerm etc directly and check
+        d = Deployment('testapp', base=basepath)
+        d.root_path = os.path.join(basepath, '.parcel')
+        lines = ['test line one', 'test line two']
+        d.prerm = " ".join(lines)
+        d.postrm = " ".join(lines)
+        d.preinst = " ".join(lines)
+        d.postinst = " ".join(lines)
+        d.build_deb()
+        dest_file = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
+        self.assertTrue(os.path.exists(dest_file))
+        os.unlink(dest_file)
