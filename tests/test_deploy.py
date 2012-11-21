@@ -12,7 +12,7 @@ from parcel_mocks import (run, local, rsync, version_mock, update_packages,
                           build_deps, mock_put, mock_get, lcd, build_deb_local)
 
 # add mocks to this list if they should have reset called on them after tests
-mocks_to_reset = [version_mock, update_packages, build_deps]
+mocks_to_reset = [version_mock, update_packages, build_deps, run]
 
 
 class TestDeploy(Deployment):
@@ -128,7 +128,13 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
 
         # now check with no basepath
         d = Deployment('testapp')
-
+        self.assertTrue(basepath in d.build_path)
+        
+        # now check with basepath without initial slash
+        basepath = os.path.join(os.path.dirname(__file__))
+        d = Deployment('testapp', base=basepath[1:])
+        self.assertTrue(basepath in d.build_path)
+        
     @patch('parcel.deploy.deploy.run', local)
     @patch.multiple('parcel.tools', run=local, rsync=rsync)
     @patch('parcel.distro.run', local)
@@ -184,9 +190,22 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
         dest_file = os.path.join(d.root_path, "tip.tar.gz")
         self.assertTrue(os.path.exists(dest_file))
 
+        # now check with a leading slash
+        d.add_to_root_fs(test_file, '/tip.tar.gz')
+        dest_file = os.path.join(d.root_path, "tip.tar.gz")
+        self.assertTrue(os.path.exists(dest_file))
+
         # check we can add data
         data = "this is some test data"
         d.add_data_to_root_fs(data, "test_data.txt")
+        dest_file = os.path.join(d.root_path, "test_data.txt")
+        self.assertTrue(os.path.exists(dest_file))
+        with open(dest_file) as f:
+            self.assertEquals(data, f.read())
+
+        # try the same with a leading slash
+        data = "this is some test data"
+        d.add_data_to_root_fs(data, "/test_data.txt")
         dest_file = os.path.join(d.root_path, "test_data.txt")
         self.assertTrue(os.path.exists(dest_file))
         with open(dest_file) as f:
@@ -239,3 +258,18 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
         dest_file = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
         self.assertTrue(os.path.exists(dest_file))
         os.unlink(dest_file)
+
+
+    @patch.multiple('parcel.deploy.deploy', run=run, put=mock_put, cd=lcd, get=mock_get)
+    @patch.multiple('parcel.tools', run=local, rsync=rsync, put=mock_put)
+    @patch('parcel.distro.run', local)
+    @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
+    def test_add_venv_with_requirements(self):
+
+        basepath = os.path.join(os.path.expanduser('~/'))
+        d = Deployment('testapp', base=basepath)
+        req_file = os.path.join(os.path.dirname(__file__),"data", "requirements_test")
+
+        # call _add_venv directly so we can just mock that run out
+        d._add_venv(requirements=req_file)
+        self.assertTrue('PIP_DOWNLOAD_CACHE' in run.call_args[0][0])
