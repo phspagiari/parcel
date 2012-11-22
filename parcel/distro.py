@@ -19,10 +19,6 @@ class Distro(object):
     def __init__(self):
         pass
 
-    @property
-    def build_base(self):
-        return '/tmp/'
-        
     def mkdir(self, remote):
         return run('mkdir -p "%s" && cd "%s" && pwd'%(remote,remote))
 
