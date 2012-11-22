@@ -6,10 +6,10 @@ from mock import patch, MagicMock
 from parcel.distro import debian
 from parcel.deploy import Deployment
 
-from parcel_mocks import run, _AttributeString, version_run, with_settings
+from parcel_mocks import run, _AttributeString, version_run, with_settings, put
 
 # add mocks to this list if they should have reset called on them after tests
-mocks_to_reset = [run, version_run, with_settings]
+mocks_to_reset = [run, version_run, with_settings, put]
 
 
 class TestDeploy(Deployment):
@@ -117,3 +117,17 @@ class DistroTestSuite(unittest.TestCase):
         retval.return_code = 0
         run.return_value = retval              # return these two objects from two calls to run
         debian.check()
+
+    
+    @patch('parcel.distro.put', put)
+    def test_push_files(self):
+        debian.push_files(['file1','file2','file3'], '/path/to/dest/')
+        self.assertTrue( 'file1' in put.call_args_list[0][0][0])
+        self.assertTrue('/path/to/dest/file1' in put.call_args_list[0][0][1])
+        self.assertTrue( 'file2' in put.call_args_list[1][0][0])
+        self.assertTrue('/path/to/dest/file2' in put.call_args_list[1][0][1])
+        self.assertTrue( 'file3' in put.call_args_list[2][0][0])
+        self.assertTrue('/path/to/dest/file3' in put.call_args_list[2][0][1])
+
+        
+

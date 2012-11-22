@@ -14,6 +14,7 @@ from parcel.versions import Version
 # fabric.api
 run = mock.MagicMock(name='run')
 local = partial(local, capture=True)
+put = mock.MagicMock(name='put')
 cd = lcd
 with_settings = mock.MagicMock(name="with_settings")
 
