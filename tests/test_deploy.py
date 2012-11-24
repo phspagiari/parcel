@@ -140,7 +140,6 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
     @patch('parcel.distro.run', local)
     @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
     def test_init_with_deps(self):
-
         basepath = os.path.join(os.path.expanduser('~/'))
         d = Deployment('testapp', base=basepath, build_deps=['requests'])
         d.prepare_app()
@@ -154,7 +153,6 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
     @patch('parcel.distro.run', local)
     @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
     def test_prepare_app(self):
-
         basepath = os.path.join(os.path.expanduser('~/'))
         d = Deployment('testapp', base=basepath)
         d.prepare_app()
@@ -172,7 +170,6 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
     @patch('parcel.distro.run', local)
     @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
     def test_deployment(self):
-
         basepath = os.path.join(os.path.expanduser('~/'))
         d = Deployment('testapp', base=basepath)
         d.prepare_app()
@@ -227,7 +224,6 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
     @patch('parcel.distro.run', local)
     @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
     def test_build_deb(self):
-
         basepath = os.path.join(os.path.expanduser('~/'))
         d = Deployment('testapp', base=basepath)
         d.root_path = os.path.join(basepath, '.parcel')
@@ -264,7 +260,6 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
     @patch('parcel.distro.run', local)
     @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages)
     def test_add_venv_with_requirements(self):
-
         basepath = os.path.join(os.path.expanduser('~/'))
         d = Deployment('testapp', base=basepath)
         req_file = os.path.join(os.path.dirname(__file__),"data", "requirements_test")

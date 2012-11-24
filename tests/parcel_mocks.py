@@ -62,31 +62,11 @@ def rsync(sources,dest,rsync_ignore=None,color_files=True):
         sources = [sources]
 
     dest = os.path.join(os.path.expanduser('~/'), dest)
-
-    print "DEST>>>>>>>>>>>>>>>>>" + dest
-
     local('mkdir -p "%s"'%dest)
     data = ''
 
-    print sources
-    print dest
-
     for s in sources:
         data += local('cp -R {0} {1}/'.format(s, dest))
-
-    print data
-
-
-    ## lines = data.splitlines()
-    ## lines = lines[1:]
-    ## i=0
-    ## while lines[i]:
-    ##     print blue(lines[i])
-    ##     i+=1
-    ## for line in lines[i:]:
-    ##     print line     
-
-    return
 
     command = []
     command.append('rsync')
@@ -97,7 +77,6 @@ def rsync(sources,dest,rsync_ignore=None,color_files=True):
     if rsync_ignore:
         if os.path.isfile(rsync_ignore):
             command.append('--exclude-from=%s'%rsync_ignore)
-    
     
     if not color_files:   
         return local(" ".join(command))

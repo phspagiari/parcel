@@ -1,15 +1,15 @@
 import unittest2 as unittest
-import sys, os
+import sys
+import os
+import tempfile
+import shutil
 
 from parcel.cache import FileCache
 from mixins import WebServerMixin
 from mock import MagicMock, patch
 
-##
-## Some functions to help building and clearing a directory
-##
-import tempfile, shutil
 
+## Some functions to help building and clearing a directory
 def mkdir():
     return tempfile.mkdtemp()
     
@@ -25,7 +25,7 @@ mock_makedirs.side_effect = OSError(2, 'Test exception', 'test')
 class CacheTestSuite(unittest.TestCase, WebServerMixin):
     """Versions test cases."""
     def setUp(self):
-        self.path = None                # use this in tests for a directory that will always be deleted
+        self.path = None  # use this in tests for a directory that will always be deleted
     
     def tearDown(self):
         if self.path:

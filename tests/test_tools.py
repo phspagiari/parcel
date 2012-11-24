@@ -1,6 +1,7 @@
 import unittest2 as unittest
-from fabric.api import run
 import tempfile
+import zlib
+import os
 
 from mock import patch, MagicMock
 
@@ -17,8 +18,6 @@ rsync_local = MagicMock(name="rsync_local")
 def tempname():
     return tempfile.mkstemp()[1]
     
-import zlib, os
-
 def crc32(filename):
     CHUNKSIZE = 8192
     checksum = 0
@@ -72,14 +71,11 @@ class ToolsTestSuite(unittest.TestCase, WebServerMixin):
             # clean up file
             os.unlink(name)
 
-
     @patch.multiple('parcel.tools', get=mock_get, run=local)
     def test_quiet_run(self):
-
         data = quiet_run('ls .')
         self.assertTrue('hello.py' in data)
         self.assertTrue('tip.tar.gz' in data)
-
 
     # patch local so rsync command not run, check correct command is called
     @patch.multiple('parcel.tools', run=rsync_run, local=rsync_local)

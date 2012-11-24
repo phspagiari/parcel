@@ -9,6 +9,7 @@ from parcel.deploy import Deployment
 from parcel_mocks import (run, _AttributeString, version_run, with_settings,
                           put, append)
 
+# some mocks only used in distro tests
 distro_run = MagicMock(name="distro_run")
 distro_cd = MagicMock(name="distro_cd")
 distro_cache = MagicMock(name="distro_cache")
@@ -17,11 +18,6 @@ distro_rsync = MagicMock(name='distro_rsync')
 
 # add mocks to this list if they should have reset called on them after tests
 mocks_to_reset = [run, version_run, with_settings, put, append]
-
-class TestDeploy(Deployment):
-    """Simple test class for deploytment which  overrides __init__ so we are not calling remote host"""
-    def __init__(self, app_name=None):
-        self.app_name = app_name
 
 
 class DistroTestSuite(unittest.TestCase):
@@ -58,7 +54,6 @@ class DistroTestSuite(unittest.TestCase):
         version_run.assert_called_once_with('apt-cache show %s 2>/dev/null | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%('test_pkg'))
         self.assertEqual(ret, None)
 
-
     @patch('parcel.distro.run', run)
     def test_update_packages(self):
         debian.update_packages()
@@ -73,7 +68,7 @@ class DistroTestSuite(unittest.TestCase):
     @patch('parcel.distro.run', run)
     def test_internal_setup(self):
         debian._setup()
-        commands = run.call_args_list                   # get the commands run remotely in order
+        commands = run.call_args_list
         
         # clean command should top list
         self.assertTrue("rm -rf" in commands[0][0][0])
@@ -97,8 +92,8 @@ class DistroTestSuite(unittest.TestCase):
         
             return retval 
             
-        run.side_effect = called              # return these two objects from two calls to run
-        self.assertRaises(Exception,debian.check,())                  # should be fpm exception
+        run.side_effect = called  # return these two objects from two calls to run
+        self.assertRaises(Exception,debian.check,())  # should be fpm exception
         
     def test_check_fpm_present_checkinstall_not(self):
         def called(command):
@@ -112,18 +107,16 @@ class DistroTestSuite(unittest.TestCase):
         
             return retval 
             
-        run.side_effect = called              # return these two objects from two calls to run
-        
-        self.assertRaises(Exception,debian.check,())                  # should be checkinstall exception
+        run.side_effect = called  # return these two objects from two calls to run
+        self.assertRaises(Exception,debian.check,())  # should be checkinstall exception
 
     @patch('parcel.distro.run', run)        
     def test_check_everything_present(self):
         class retobj: pass
         retval = retobj()
         retval.return_code = 0
-        run.return_value = retval              # return these two objects from two calls to run
+        run.return_value = retval  # return these two objects from two calls to run
         debian.check()
-
     
     @patch('parcel.distro.put', put)
     def test_push_files(self):
@@ -137,7 +130,6 @@ class DistroTestSuite(unittest.TestCase):
 
     @patch('parcel.distro.run', run)
     def test_check(self):
-
         out = _AttributeString("/usr/local/bin/fpm")
         out.return_code = 0
         run.return_value = out
@@ -149,7 +141,6 @@ class DistroTestSuite(unittest.TestCase):
 
     @patch('parcel.distro.run', distro_run)
     def test_check_no_fpm(self):
-
         fpm_out = _AttributeString("/usr/local/bin/fpm")
         fpm_out.return_code = 1
         checkinstall_out = _AttributeString("/usr/bin/checkinstall")
@@ -161,7 +152,6 @@ class DistroTestSuite(unittest.TestCase):
 
     @patch('parcel.distro.run', distro_run)
     def test_check_no_checkinstall(self):
-
         fpm_out = _AttributeString("/usr/local/bin/fpm")
         fpm_out.return_code = 0
         checkinstall_out = _AttributeString("/usr/bin/checkinstall")
@@ -201,19 +191,12 @@ class DistroTestSuite(unittest.TestCase):
 
         self.assertTrue(distro_cache.call_args_list[0][0][0] == 'http://production.cf.rubygems.org/rubygems/rubygems-1.8.24.tgz')
 
-
     @patch.multiple('parcel.distro', with_settings=with_settings, run=run, put=put, cd=distro_cd, append=append, rsync=distro_rsync)
     @patch('parcel.distro.Debian.mkdir', distro_mkdir)
     def test_install_package(self):
-
         distro_mkdir.side_effect = ['.parcel-build-temp', '.parcel-build-temp/src', '.parcel-build-temp/build', '.parcel-build-temp/pkg_dir']
         #run.side_effect = ["test", "testapp", "0.1.2", "test", "test"]
         debian.install_package('testapp_0.1.2_all.deb')
-
-        print append.call_args_list
-        print run.call_args_list
-        print distro_rsync.call_args_list
-        print run.call_count
 
         self.assertTrue(append.call_args_list[0][0][0] == '/etc/apt/sources.list', 'deb file://.parcel-build-temp/pkg_dir /')
         self.assertTrue(run.call_args_list[0][0][0] == 'dpkg-scanpackages . /dev/null | gzip -c -9 > Packages.gz')
@@ -222,7 +205,6 @@ class DistroTestSuite(unittest.TestCase):
         self.assertTrue(run.call_args_list[3][0][0] == 'apt-get update -qq')
         self.assertTrue('apt-get install' in run.call_args_list[4][0][0])
 
-        
     @patch.multiple('parcel.distro', with_settings=with_settings, run=run, put=put, cd=distro_cd)
     @patch('parcel.distro.cache.get', distro_cache)
     @patch('parcel.distro.Debian.mkdir', distro_mkdir)    

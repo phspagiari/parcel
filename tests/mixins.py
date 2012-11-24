@@ -19,19 +19,18 @@ class WebServerMixin(object):
                 self.server = ThreadedTCPServer((self.host, port), SimpleHTTPServer.SimpleHTTPRequestHandler)
             except socket.error, e:
                 if e.errno==errno.EADDRINUSE:
-                    port += 1               # address in use. Increase the port
+                    port += 1  # address in use. Increase the port
                 else:
                     raise e
         self.ip, self.port = self.server.server_address
         
-        self.webroot = os.path.join(os.path.dirname(__file__),"data")           # serve out the data directory
+        self.webroot = os.path.join(os.path.dirname(__file__),"data")  # serve out the data directory
 
         # quiet down the messages from SimpleHTTPRequestHandler, remove these lines for more output
         def log_message(self, format, *args):
             return
         self.server.RequestHandlerClass.log_message = log_message
 
-        
         # Start a thread with the server
         def sthread():
             os.chdir(self.webroot)                 
@@ -45,4 +44,3 @@ class WebServerMixin(object):
 
     def stopWebServer(self):
         self.server.shutdown()
-     
