@@ -2,8 +2,7 @@ init:
 	python setup.py develop
 	pip install -r requirements.txt
 
-tests:
-	test
+tests: test
 
 test:
 	nosetests ./tests/*.py
