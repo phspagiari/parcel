@@ -2,7 +2,7 @@ Parcel is written and maintained by Crispin Wellington and Andrew Macgregor:
 
 Development Lead
 ````````````````
- - Crispin Wellington
+ - Crispin Wellington <retrogradeorbit@gmail.com>
 
 Core Developers
 ```````````````

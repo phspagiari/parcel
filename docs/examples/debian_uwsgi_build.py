@@ -12,7 +12,8 @@ env.arch = distro.Debian()
 
 @task
 def build_for_uwsgi():
-    """Instantiate a Deployment object and build a Debian based package for uwsgi deployment."""
+    """Instantiate a Deployment object and build a Debian based package for
+    uwsgi deployment."""
     assert hasattr(env, 'service_name'), "You need to set env.service_name"
     assert hasattr(env, 'service_port'), "You need to set env.service_port"
     d = deploy.uWSGI(app_name=env.app_name,

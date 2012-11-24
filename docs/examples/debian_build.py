@@ -12,7 +12,8 @@ env.arch = distro.Debian()
 
 @task
 def build():
-    """Instantiate a Deployment object and build a Debian based package."""
+    """Instantiate a Deployment object and
+    build a Debian based package."""
     d = deploy.Deployment(app_name=env.app_name,
                           build_deps=env.build_deps,
                           run_deps=env.run_deps,

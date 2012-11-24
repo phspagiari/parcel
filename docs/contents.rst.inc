@@ -40,6 +40,16 @@ A more in-depth guide to using Parcel to build and deploy packages for common we
 
    user/tutorial
 
+Cookbook
+--------
+
+Common recipes to use Parcel in your fabfiles.
+
+.. toctree::
+   :maxdepth: 2
+
+   user/cookbook
+
 
 Build Host
 -----------

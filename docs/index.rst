@@ -20,9 +20,9 @@ Feature Support
 
 Parcel is under heavy development and initially supports: 
 
-- mercurial repositories
-- debian targets
-- uwsgi deployment
+- Mercurial repositories
+- Debian targets
+- uWSGI deployment
 
 
 
