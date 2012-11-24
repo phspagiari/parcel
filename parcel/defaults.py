@@ -61,7 +61,7 @@ case "$1" in
 
     install|upgrade)
         {lines}
-
+        ;;
     abort-upgrade)
 	;;
 
@@ -86,7 +86,7 @@ APP_NAME={app_name}
 case "$1" in
     configure)
         {lines}
-    ;;
+        ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
     ;;
