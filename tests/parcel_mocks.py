@@ -48,9 +48,6 @@ blue = mock.MagicMock(name='blue')
 # fabric.contrib.files
 append = mock.MagicMock(name="append")
 
-# rsync
-rsync = mock.MagicMock(name='rsync')
-
 # parcel.distro
 update_packages = mock.MagicMock(name="update_packages")
 build_deps =  mock.MagicMock(name="build_deps")

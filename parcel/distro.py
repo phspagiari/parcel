@@ -109,8 +109,8 @@ class Debian(Distro):
             
             with cd(build_dir):
                 run("tar xvfz ../src/%s"%filename)
-            with cd(build_dir+"/rubygems-1.8.24"):
-                run("ruby setup.rb")
+                with cd("rubygems-1.8.24"):
+                    run("ruby setup.rb")
             run("gem1.8 install fpm")
 
     def install_package(self, pkg):

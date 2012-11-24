@@ -3,14 +3,20 @@ import unittest2 as unittest
 
 from mock import patch, MagicMock
 
-from parcel.distro import debian
+from parcel.distro import debian, ubuntu, Distro
 from parcel.deploy import Deployment
 
-from parcel_mocks import run, _AttributeString, version_run, with_settings, put
+from parcel_mocks import (run, _AttributeString, version_run, with_settings,
+                          put, append)
+
+distro_run = MagicMock(name="distro_run")
+distro_cd = MagicMock(name="distro_cd")
+distro_cache = MagicMock(name="distro_cache")
+distro_mkdir = MagicMock(name="distro_mkdir")
+distro_rsync = MagicMock(name='distro_rsync')
 
 # add mocks to this list if they should have reset called on them after tests
-mocks_to_reset = [run, version_run, with_settings, put]
-
+mocks_to_reset = [run, version_run, with_settings, put, append]
 
 class TestDeploy(Deployment):
     """Simple test class for deploytment which  overrides __init__ so we are not calling remote host"""
@@ -129,5 +135,101 @@ class DistroTestSuite(unittest.TestCase):
         self.assertTrue( 'file3' in put.call_args_list[2][0][0])
         self.assertTrue('/path/to/dest/file3' in put.call_args_list[2][0][1])
 
-        
+    @patch('parcel.distro.run', run)
+    def test_check(self):
 
+        out = _AttributeString("/usr/local/bin/fpm")
+        out.return_code = 0
+        run.return_value = out
+        debian.check()
+
+        # check for fpm
+        self.assertTrue( 'which fpm' in run.call_args_list[0][0][0])
+        self.assertTrue( 'which checkinstall' in run.call_args_list[1][0][0])
+
+    @patch('parcel.distro.run', distro_run)
+    def test_check_no_fpm(self):
+
+        fpm_out = _AttributeString("/usr/local/bin/fpm")
+        fpm_out.return_code = 1
+        checkinstall_out = _AttributeString("/usr/bin/checkinstall")
+        checkinstall_out.return_code = 0
+        distro_run.side_effect = [fpm_out, checkinstall_out]
+
+        with self.assertRaises(Exception):
+            debian.check()
+
+    @patch('parcel.distro.run', distro_run)
+    def test_check_no_checkinstall(self):
+
+        fpm_out = _AttributeString("/usr/local/bin/fpm")
+        fpm_out.return_code = 0
+        checkinstall_out = _AttributeString("/usr/bin/checkinstall")
+        checkinstall_out.return_code = 1
+        distro_run.side_effect = [fpm_out, checkinstall_out]
+
+        with self.assertRaises(Exception):
+            debian.check()
+
+    def test_setup_on_distro(self):
+        d = Distro()
+        with self.assertRaises(NotImplementedError):
+            d.setup()
+
+    def test_install_package_on_distro(self):
+        d = Distro()
+        with self.assertRaises(NotImplementedError):
+            d.install_package('test_pkg')
+
+    @patch.multiple('parcel.distro', with_settings=with_settings, run=run, put=put, cd=distro_cd)
+    @patch('parcel.distro.cache.get', distro_cache)
+    @patch('parcel.distro.Debian.mkdir', distro_mkdir)    
+    def test_setup(self):
+        distro_cache.return_value = '/a/test/path/file.gz'
+        distro_mkdir.side_effect = ['.parcel-build-temp', '.parcel-build-temp/src', '.parcel-build-temp/build']
+        debian.setup()
+
+        self.assertTrue(run.call_args_list[0][0][0] == 'apt-get install -qq libyaml-ruby libzlib-ruby ruby ruby-dev checkinstall')
+        self.assertTrue(run.call_args_list[1][0][0] == "rm -rf '.parcel-build-temp'")
+        self.assertTrue(run.call_args_list[2][0][0] == 'tar xvfz ../src/file.gz')
+        self.assertTrue(run.call_args_list[3][0][0] == 'ruby setup.rb')
+        self.assertTrue(run.call_args_list[4][0][0] == 'gem1.8 install fpm')
+
+        self.assertTrue(distro_mkdir.call_args_list[0][0][0] == '.parcel-build-temp')
+        self.assertTrue(distro_mkdir.call_args_list[1][0][0] == '.parcel-build-temp/src')
+        self.assertTrue(distro_mkdir.call_args_list[2][0][0] == '.parcel-build-temp/build')
+
+        self.assertTrue(distro_cache.call_args_list[0][0][0] == 'http://production.cf.rubygems.org/rubygems/rubygems-1.8.24.tgz')
+
+
+    @patch.multiple('parcel.distro', with_settings=with_settings, run=run, put=put, cd=distro_cd, append=append, rsync=distro_rsync)
+    @patch('parcel.distro.Debian.mkdir', distro_mkdir)
+    def test_install_package(self):
+
+        distro_mkdir.side_effect = ['.parcel-build-temp', '.parcel-build-temp/src', '.parcel-build-temp/build', '.parcel-build-temp/pkg_dir']
+        #run.side_effect = ["test", "testapp", "0.1.2", "test", "test"]
+        debian.install_package('testapp_0.1.2_all.deb')
+
+        print append.call_args_list
+        print run.call_args_list
+        print distro_rsync.call_args_list
+        print run.call_count
+
+        self.assertTrue(append.call_args_list[0][0][0] == '/etc/apt/sources.list', 'deb file://.parcel-build-temp/pkg_dir /')
+        self.assertTrue(run.call_args_list[0][0][0] == 'dpkg-scanpackages . /dev/null | gzip -c -9 > Packages.gz')
+        self.assertTrue(run.call_args_list[1][0][0] == "dpkg -f testapp_0.1.2_all.deb | grep '^Package: ' | sed -e 's/Package: //'")
+        self.assertTrue(run.call_args_list[2][0][0] == "dpkg -f testapp_0.1.2_all.deb | grep '^Version: ' | sed -e 's/Version: //'")
+        self.assertTrue(run.call_args_list[3][0][0] == 'apt-get update -qq')
+        self.assertTrue('apt-get install' in run.call_args_list[4][0][0])
+
+        
+    @patch.multiple('parcel.distro', with_settings=with_settings, run=run, put=put, cd=distro_cd)
+    @patch('parcel.distro.cache.get', distro_cache)
+    @patch('parcel.distro.Debian.mkdir', distro_mkdir)    
+    def test_setup_ubuntu(self):
+        distro_cache.return_value = '/a/test/path/file.gz'
+        distro_mkdir.side_effect = ['.parcel-build-temp', '.parcel-build-temp/src', '.parcel-build-temp/build']
+        ubuntu.setup()
+
+        self.assertTrue(run.call_args_list[0][0][0] == 'apt-get install rubygems -y')
+        self.assertTrue(run.call_args_list[1][0][0] == 'gem install fpm')
