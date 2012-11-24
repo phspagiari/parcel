@@ -90,12 +90,7 @@ class Debian(Distro):
 
     def setup(self):
         """this method sets up a remote debian box for parcel package building.
-        Installs fpm, easyinstall and some libraries
-
-        there must be a a directory called archives
-        and in it a file rubygems-1.8.24.tgz
-
-        TODO: remove this requirement. get the file we need.
+        Installs fpm, easyinstall and some libraries.
         """
         with settings(user='root'):
             self.build_deps(['libyaml-ruby','libzlib-ruby','ruby','ruby-dev','checkinstall'])
