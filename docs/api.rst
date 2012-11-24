@@ -15,6 +15,35 @@ The majority of work done by Parcel is using the :class:`Deployment <Deployment>
 .. autoclass:: Deployment
    :inherited-members:
 
+
+.. module:: parcel.distro
+
+Distro
+------
+
+Code specific to different distributions can be found in the :class:`Distro <Distro>` object.
+
+.. autoclass:: Distro
+   :inherited-members:
+
+
+Debian
+------
+
+Code specific to the Debian distribution can be found in the :class:`Debian <Debian>` object.
+
+.. autoclass:: Debian
+   :inherited-members:
+
+Ubuntu
+------
+
+Code specific to the Ubuntu distribution can be found in the :class:`Ubuntu <Ubuntu>` object.
+
+.. autoclass:: Ubuntu
+   :inherited-members:
+
+
 Helpers
 -------
 
@@ -35,12 +64,3 @@ Functions for inspecting built packages are available in parcel.probes
 .. autofunction:: deb_install
 .. autofunction:: deb_control
 .. autofunction:: deb_tree
-
-Tasks
------
-
-Some prebuilt functions to use for common tasks or to copy and adapt.
-
-.. module:: parcel.tasks
-.. autofunction:: build
-.. autofunction:: build_for_uwsgi
