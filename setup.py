@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import os
 import sys
 
@@ -21,14 +20,22 @@ setup(
     name='parcel',
     version=parcel.__version__,
     description='Python Webapp Deployment Made Easier.',
-    long_description="""Classes to help writing fabric files for python app deployment""",
+    long_description=open('README.txt').read(),
     author='Crispin Wellington',
     author_email='retrogradeorbit@gmail.com',
-    url='https://bitbucket.org/retrogradeorbit/tailor',
+    url='https://bitbucket.org/andrewmacgregor/parcel',
     packages=packages,
     package_data={'': ['LICENSE']},
-    package_dir={'requests': 'requests'},
     include_package_data=True,
     install_requires=requires,
     license=open('LICENSE').read(),
+    classifiers=(
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Natural Language :: English',
+        'License :: OSI Approved :: ISC License (ISCL)',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7'
+    )
 )
