@@ -9,7 +9,7 @@ from parcel.deploy import uWSGI
 from parcel.distro import Debian
 from parcel.versions import Version
 from parcel_mocks import (run, local, rsync, version_mock, update_packages,
-                          build_deps, mock_put, mock_get, lcd, build_deb_local)
+                          build_deps, mock_put, mock_get, lcd, mock_local)
 
 # add mocks to this list if they should have reset called on them after tests
 mocks_to_reset = [version_mock, update_packages, build_deps, run]

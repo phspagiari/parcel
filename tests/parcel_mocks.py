@@ -13,7 +13,7 @@ from parcel.versions import Version
 
 # fabric.api
 run = mock.MagicMock(name='run')
-local = partial(local, capture=True)
+
 put = mock.MagicMock(name='put')
 cd = lcd
 with_settings = mock.MagicMock(name="with_settings")
@@ -28,16 +28,22 @@ def mock_get(remote_path, local_path=None):
         shutil.copy(remote_path, local_path)
 
 version_run = mock.MagicMock(name="version_run")  # used in test_distro
-
-# used in test_deploy for test_build_deb
-def build_deb_local():
+local = partial(local, capture=True) # this makes local return more like run
+def mock_local():
     def func(command):
+
+        # used in test_deploy for test_build_deb
         if command.startswith('fpm'):
             tmpdir = tempfile.mkdtemp()
             test_deb = os.path.join(os.path.dirname(__file__),"data", "test.deb")
             deb = os.path.join(tmpdir, 'testapp_0.1.2_all.deb')
             shutil.copy(test_deb, deb)
             return 'Created deb package {{"path":"{0}"}}'.format(deb)
+
+        # used in test_deploy to prevent actual pip installs
+        if command.startswith('PIP_DOWNLOAD_CACHE'):
+            return 'Mocked pip install'
+
         return local(command)
     return func
 
