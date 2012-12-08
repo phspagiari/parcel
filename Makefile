@@ -11,7 +11,7 @@ coverage:
 	nosetests --with-coverage --cover-erase --cover-package=parcel --cover-html --cover-branches
 
 docs:
-	cd docs; make dirhtml
+	cd docs; make html
 
 egg: build
 	python setup.py bdist_egg

@@ -1,9 +1,18 @@
 .. _install:
 
+Installing with Pip
+-----------------------
+
+You can install Parcel with Pip::
+
+    $ pip install parcel
+
+
+
 Installing from source
 -----------------------
 
-Parcel is available on the `BitBucket project page <https://bitbucket.org/retrogradeorbit/parcel>`_.
+Parcel is available on the `BitBucket project page <https://bitbucket.org/andrewmacgregor/parcel>`_.
 
 Clone the public repository::
 
