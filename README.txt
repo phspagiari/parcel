@@ -28,3 +28,5 @@ Core Developers
  - Crispin Wellington <retrogradeorbit@gmail.com>
  - Andrew Macgregor <amacgregor@gmail.com>
 
+For further information see the Parcel BitBucket project page:
+https://bitbucket.org/andrewmacgregor/parcel
