@@ -220,6 +220,7 @@ class Deployment(object):
         
     def _sync_app(self):
         """There is no revision control at the moment so... just copy directory over."""
+        print self.build_path
         tools.rsync([self.path+'/'],self.build_path,rsync_ignore='.rsync-ignore')
 
     def _add_venv(self,requirements="requirements.txt"):

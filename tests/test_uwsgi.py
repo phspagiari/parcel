@@ -2,6 +2,7 @@ import sys
 import os
 import unittest2 as unittest
 from functools import partial
+import shutil
 import mock
 from mock import patch
 
@@ -14,12 +15,17 @@ from parcel_mocks import (run, local, rsync, version_mock, update_packages,
 # add mocks to this list if they should have reset called on them after tests
 mocks_to_reset = [version_mock, update_packages, build_deps, run]
 
+# set build dir to a test value so we can remove it cleanly
+uWSGI.build_dir = ".parcel_test"
+
 class DeployTestSuite_AppBuild(unittest.TestCase):
 
     def setUp(self):
         pass
     
     def tearDown(self):
+        test_build_dir = os.path.join(os.path.expanduser('~/'), '.parcel_test') 
+        shutil.rmtree(test_build_dir, True)
         for m in mocks_to_reset:
             m.reset_mock()
 

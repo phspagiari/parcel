@@ -2,6 +2,7 @@ import sys
 import os
 import unittest2 as unittest
 from functools import partial
+import shutil
 import mock
 from mock import patch
 
@@ -13,6 +14,9 @@ from parcel_mocks import (run, rsync, version_mock, update_packages,
 
 # add mocks to this list if they should have reset called on them after tests
 mocks_to_reset = [version_mock, update_packages, build_deps, run]
+
+# set build dir to a test value so we can remove it cleanly
+Deployment.build_dir = ".parcel_test"
 
 
 class TestDeploy(Deployment):
@@ -26,8 +30,10 @@ class DeployTestSuite(unittest.TestCase):
     def setUp(self):
         self.app_name = "testapp"
         self.deploy = TestDeploy(self.app_name)
-
+        
     def tearDown(self):
+        test_build_dir = os.path.join(os.path.expanduser('~/'), '.parcel_test') 
+        shutil.rmtree(test_build_dir, True)
         for m in mocks_to_reset:
             m.reset_mock()
         
@@ -94,6 +100,8 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
         pass
     
     def tearDown(self):
+        test_build_dir = os.path.join(os.path.expanduser('~/'), '.parcel_test') 
+        shutil.rmtree(test_build_dir, True)
         for m in mocks_to_reset:
             m.reset_mock()
             
@@ -237,7 +245,7 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
 
         # now do it without templates to exercise those paths
         d = Deployment('testapp', base=basepath)
-        d.root_path = os.path.join(basepath, '.parcel')
+        d.root_path = os.path.join(basepath, '.parcel_test')
         d.build_deb(templates=False)
         dest_file = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
         self.assertTrue(os.path.exists(dest_file))
@@ -245,7 +253,7 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
 
         # now set some prerm etc directly and check
         d = Deployment('testapp', base=basepath)
-        d.root_path = os.path.join(basepath, '.parcel')
+        d.root_path = os.path.join(basepath, '.parcel_test')
         lines = ['test line one', 'test line two']
         d.prerm = " ".join(lines)
         d.postrm = " ".join(lines)
