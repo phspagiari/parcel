@@ -232,11 +232,12 @@ class DeployTestSuite_AppBuild(unittest.TestCase):
     @patch.multiple('parcel.tools', run=mock_local(), rsync=rsync, put=mock_put)
     @patch('parcel.distro.run', mock_local())
     @patch.multiple('parcel.distro.Debian', version=version_mock, update_packages=update_packages, build_deps=build_deps)
-    def _test_build_deb(self):
+    def test_build_deb(self):
         basepath = os.path.join(os.path.expanduser('~/'))
         d = Deployment('testapp', base=basepath)
         d.root_path = os.path.join(basepath, '.parcel')
-
+        d.prepare_app()
+        
         # test build, will not actually call fpm
         d.build_deb()
         dest_file = os.path.join(os.path.dirname(__file__),"data", "testapp_0.1.2_all.deb")
