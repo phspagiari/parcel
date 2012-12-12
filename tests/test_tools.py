@@ -94,7 +94,7 @@ class ToolsTestSuite(unittest.TestCase, WebServerMixin):
         # as we are not really calling rsync
         ignore_file = os.path.join(os.path.dirname(__file__),"data", "hello.py")
         rsync(test_file, 'test.tar.gz', rsync_ignore=ignore_file)
-        self.assertTrue('--exclude-from={}'.format(ignore_file) in rsync_local.call_args[0][0])
+        self.assertTrue('--exclude-from={0}'.format(ignore_file) in rsync_local.call_args[0][0])
 
         # with rsync_ignore but a non-existent file
         rsync(test_file, 'test.tar.gz', rsync_ignore='rsync_ignore')
