@@ -116,10 +116,10 @@ class Debian(Distro):
         pkg_dir = self.mkdir(base_dir+"/pkg_dir")
         rsync(pkg,pkg_dir)
         with cd(pkg_dir):
-            print green(append("/etc/apt/sources.list", "deb file://{} /".format(pkg_dir))) 
+            print green(append("/etc/apt/sources.list", "deb file://{0} /".format(pkg_dir))) 
             print green(run("dpkg-scanpackages . /dev/null | gzip -c -9 > Packages.gz"))
-            pkg_name = run("dpkg -f {} | grep '^Package: ' | sed -e 's/Package: //'".format(pkg))
-            pkg_version = run("dpkg -f {} | grep '^Version: ' | sed -e 's/Version: //'".format(pkg))
+            pkg_name = run("dpkg -f {0} | grep '^Package: ' | sed -e 's/Package: //'".format(pkg))
+            pkg_version = run("dpkg -f {0} | grep '^Version: ' | sed -e 's/Version: //'".format(pkg))
             print green(run("apt-get update -qq"))
             print green(run("apt-get install {0}={1} -qq --allow-unauthenticated".format(pkg_name,pkg_version)))
 

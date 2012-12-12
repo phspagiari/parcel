@@ -44,6 +44,10 @@ def mock_local():
         if command.startswith('PIP_DOWNLOAD_CACHE'):
             return 'Mocked pip install'
 
+        # used in test_deploy to 'rm' the package that was not created by fpm (because it was mocked)
+        if command.startswith("rm '"):
+            return 'Mocked rm on deb package.'
+
         return local(command)
     return func
 

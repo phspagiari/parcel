@@ -30,3 +30,6 @@ Core Developers
 
 For further information see the Parcel BitBucket project page:
 https://bitbucket.org/andrewmacgregor/parcel
+
+For documentation see:
+http://parcel.readthedocs.org/
