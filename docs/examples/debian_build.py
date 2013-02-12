@@ -22,4 +22,4 @@ def build():
                           arch=env.arch
                           )
     d.prepare_app()
-    d.build_deb()
+    d.build_package()

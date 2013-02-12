@@ -124,6 +124,31 @@ class Debian(Distro):
             print green(run("apt-get install {0}={1} -qq --allow-unauthenticated".format(pkg_name,pkg_version)))
 
 
+    def build_package(self, deployment=None):
+        """
+        Runs architecture specific packaging tasks
+        """
+        assert deployment
+        
+        with cd(deployment.root_path):
+            rv = run(
+                'fpm -s dir -t deb -n {0.pkg_name} -v {0.version} '
+                '-a all -x "*.git" -x "*.bak" -x "*.orig" {0.hooks_str} '
+                '--description "Automated build. '
+                'No Version Control." '
+                '{0.deps_str} {0.dirs_str}'
+                .format(deployment)
+            )
+
+            filename = rv.split('"')[-2]
+            get(filename, './')
+            run("rm '%s'"%filename)
+            print green(os.path.basename(filename))
+
+
+
+
+
 class Ubuntu(Debian):
 
     def setup(self):

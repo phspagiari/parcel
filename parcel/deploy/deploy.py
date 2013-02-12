@@ -133,8 +133,8 @@ class Deployment(object):
     def add_postinst(self, lines):
         """Add lines to the postinst file"""
         self.postinst_lines.extend(lines)
-        
-    def build_deb(self, templates=True):
+
+    def build_package(self, templates=True):
         """Takes the whole app including the virtualenv, packages it using fpm and downloads it to the local host.
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
 	    """
@@ -151,8 +151,8 @@ class Deployment(object):
                 self.write_postinst_template(defaults.postinst_template)
         
         with cd(self.base_path):
-            deps_str = '-d ' + ' -d '.join(self.run_deps)
-            dirs_str = '.'
+            self.deps_str = '-d ' + ' -d '.join(self.run_deps)
+            self.dirs_str = '.'
             
             if self.prerm or self.postrm or self.preinst or self.postinst:
                 run("rm -rf debian && mkdir -p debian")
@@ -177,22 +177,10 @@ class Deployment(object):
                 tools.write_contents_to_remote(self.postinst,'debian/postinst')
                 hooks.extend(['--after-install', '../debian/postinst'])
             
-            hooks_str = ' '.join(hooks)
+            self.hooks_str = ' '.join(hooks)
             
-        with cd(self.root_path):
-            rv = run(
-                'fpm -s dir -t deb -n {0.pkg_name} -v {0.version} '
-                '-a all -x "*.git" -x "*.bak" -x "*.orig" {1} '
-                '--description "Automated build. '
-                'No Version Control." '
-                '{2} {3}'
-                .format(self, hooks_str, deps_str, dirs_str)
-            )
+        self.arch.build_package(deployment=self)
 
-            filename = rv.split('"')[-2]
-            get(filename, './')
-            run("rm '%s'"%filename)
-            print green(os.path.basename(filename))
 
     def write_prerm_template(self, template):
         """Take a template prerm script and format it with appname and prerm_lines
