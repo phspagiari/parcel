@@ -46,3 +46,8 @@ def setup_ubuntu():
     from parcel.distro import ubuntu
     ubuntu.setup()    
     
+@task
+def setup_centos():
+    """Set up the build host for building in a Centos way."""
+    from parcel.distro import centos
+    centos.setup()

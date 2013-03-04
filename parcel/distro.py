@@ -23,12 +23,14 @@ class Distro(object):
         return run('mkdir -p "%s" && cd "%s" && pwd'%(remote,remote))
 
     def update_packages(self):
-        with settings(user='root'):
-            run("apt-get update -qq")
+        """This method should update the packages on the remote box.
+        """
+        raise NotImplementedError
 
     def build_deps(self, deps):
-        with settings(user='root'):
-            run("apt-get install -qq %s"%(' '.join(deps)))
+        """This method should install the build dependencies on the remote box.
+        """
+        raise NotImplementedError
 
     def version(self,package):
         """Look at the debian apt package system for a package with this name and return its version.
@@ -88,6 +90,14 @@ class Distro(object):
 
 class Debian(Distro):
 
+    def update_packages(self):
+        with settings(user='root'):
+            run("apt-get update -qq")
+
+    def build_deps(self, deps):
+        with settings(user='root'):
+            run("apt-get install -qq %s"%(' '.join(deps)))
+
     def setup(self):
         """this method sets up a remote debian box for parcel package building.
         Installs fpm, easyinstall and some libraries.
@@ -146,9 +156,6 @@ class Debian(Distro):
             print green(os.path.basename(filename))
 
 
-
-
-
 class Ubuntu(Debian):
 
     def setup(self):
@@ -160,6 +167,49 @@ class Ubuntu(Debian):
             run("gem install fpm")
 
 
+class Centos(Distro):
+
+    def update_packages(self):
+        with settings(user='root'):
+            run("yum update -y")
+
+    def build_deps(self, deps):
+        with settings(user='root'):
+            run("yum install -y %s"%(' '.join(deps)))
+
+    def setup(self):
+        """this method sets up a remote centos box for parcel package building.
+        Installs fpm and also rubygems if not present.
+        """
+        with settings(user='root'):
+            run("yum install rubygems -y")
+            run("gem install fpm")
+            run("yum install rpm-build -y")
+
+    def build_package(self, deployment=None):
+        """
+        Runs architecture specific packaging tasks
+        """
+        assert deployment
+        
+        with cd(deployment.root_path):
+            rv = run(
+                'fpm -s dir -t rpm -n {0.pkg_name} -v {0.version} '
+                '-a all -x "*.git" -x "*.bak" -x "*.orig" {0.hooks_str} '
+                '--description "Automated build. '
+                'No Version Control." '
+                '{0.deps_str} {0.dirs_str}'
+                .format(deployment)
+            )
+
+            filename = rv.split('"')[-2]
+            get(filename, './')
+            run("rm '%s'"%filename)
+            print green(os.path.basename(filename))
+
+
+
 # the distribution module instances
 debian = Debian()
 ubuntu = Ubuntu()
+centos = Centos()

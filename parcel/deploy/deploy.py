@@ -63,7 +63,7 @@ class Deployment(object):
         #: The directory that will be used as the base level directory.
         self.path = os.path.realpath(path)
 
-	    #: Location of files during build on build host. Default is user's home directory.
+        #: Location of files during build on build host. Default is user's home directory.
         #: If path is relative, it's relative to the remote user's home directory. If the path is absolute,
         #: it's used as is.
         self.base_path = os.path.join(remotehome,self.build_dir)
