@@ -3,7 +3,7 @@ import unittest2 as unittest
 
 from mock import patch, MagicMock
 
-from parcel.distro import debian, ubuntu, Distro
+from parcel.distro import debian, ubuntu, centos, Distro
 from parcel.deploy import Deployment
 
 from parcel_mocks import (run, _AttributeString, version_run, with_settings,
@@ -215,3 +215,48 @@ class DistroTestSuite(unittest.TestCase):
 
         self.assertTrue(run.call_args_list[0][0][0] == 'apt-get install rubygems -y')
         self.assertTrue(run.call_args_list[1][0][0] == 'gem install fpm')
+
+
+    ## centos tests
+    @patch('parcel.distro.run', run)
+    def test_centos_update_packages(self):
+        centos.update_packages()
+        run.assert_called_once_with("yum update -y")
+
+    @patch('parcel.distro.run', run)
+    def test_centos_build_deps(self):
+        deps = ['test_dep0', 'test_dep1']
+        centos.build_deps(deps)
+        run.assert_called_once_with("yum install -y %s"%(' '.join(deps)))
+
+    @patch('parcel.distro.run', version_run)
+    def test_centos_version(self):
+        out = _AttributeString("0.5.1")
+        out.return_code = 0
+        version_run.return_value = out
+        ret = centos.version('test_pkg')
+        version_run.assert_called_once_with('rpm -qi %s 2>/dev/null | sed -nr "s/^Version.+: ([0-9]+)(-.+)?/\\1/p"'%('test_pkg'))
+        self.assertEqual(str(ret), "0.5.1")
+
+    @patch('parcel.distro.run', version_run)
+    def test_centos_version_not_found(self):
+        out = _AttributeString("")
+        out.return_code = 1
+        version_run.return_value = out
+        ret = centos.version('test_pkg')
+        version_run.assert_called_once_with('rpm -qi %s 2>/dev/null | sed -nr "s/^Version.+: ([0-9]+)(-.+)?/\\1/p"'%('test_pkg'))
+        self.assertEqual(ret, None)
+
+
+    @patch.multiple('parcel.distro', with_settings=with_settings, run=run, put=put, cd=distro_cd)
+    @patch('parcel.distro.cache.get', distro_cache)
+    @patch('parcel.distro.Centos.mkdir', distro_mkdir)    
+    def test_centos_setup(self):
+        distro_cache.return_value = '/a/test/path/file.gz'
+        distro_mkdir.side_effect = ['.parcel-build-temp', '.parcel-build-temp/src', '.parcel-build-temp/build']
+        centos.setup()
+
+        self.assertTrue(run.call_args_list[0][0][0] == 'yum install rubygems -y')
+        self.assertTrue(run.call_args_list[1][0][0] == 'gem install fpm')
+        self.assertTrue(run.call_args_list[2][0][0] == 'yum install rpm-build -y')
+        self.assertTrue(run.call_args_list[3][0][0] == 'yum install rsync -y')
