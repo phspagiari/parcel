@@ -44,17 +44,8 @@ class Distro(object):
     	
     def check(self):
         """Check the remote build host to see if the relevant software to build packages is installed"""
-        with settings(warn_only=True):
-            # check for fpm
-            result = run('which fpm')
-            if result.return_code:
-                raise Exception("Build host does not have fpm installed and on the executable path")
-            
-            # check for checkinstall
-            result = run('which checkinstall')
-            if result.return_code:
-                raise Exception("Build host does not have checkinstall installed and on the executable path")
-        
+        raise NotImplementedError
+    
     def setup(self):
         """This method should set up a remote box for parcel package building.
         It should install fpm.
@@ -105,6 +96,19 @@ class Debian(Distro):
                 # error fetching package info. Assume there is no such named package. Return None
                 return None
             return versions.Version(vstring)
+
+    def check(self):
+        """Check the remote build host to see if the relevant software to build packages is installed"""
+        with settings(warn_only=True):
+            # check for fpm
+            result = run('which fpm')
+            if result.return_code:
+                raise Exception("Build host does not have fpm installed and on the executable path")
+            
+            # check for checkinstall
+            result = run('which checkinstall')
+            if result.return_code:
+                raise Exception("Build host does not have checkinstall installed and on the executable path")
 
     def setup(self):
         """this method sets up a remote debian box for parcel package building.
@@ -201,6 +205,14 @@ class Centos(Distro):
             # remove vender part of string
             vstring = vstring.split()[0]
             return versions.Version(vstring)
+
+    def check(self):
+        """Check the remote build host to see if the relevant software to build packages is installed"""
+        with settings(warn_only=True):
+            # check for fpm
+            result = run('which fpm')
+            if result.return_code:
+                raise Exception("Build host does not have fpm installed and on the executable path")
 
     def setup(self):
         """this method sets up a remote centos box for parcel package building.
