@@ -21,6 +21,7 @@ Feature Support
 Parcel is under heavy development and initially supports: 
 
 - Debian targets
+- CentOS targets
 - uWSGI deployment
 
 

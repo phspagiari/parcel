@@ -16,3 +16,7 @@ Building a Debian Package for uWSGI deployment
 
 .. literalinclude:: ../examples/debian_uwsgi_build.py
 
+Building a Centos RPM Package
+-------------------------
+
+.. literalinclude:: ../examples/centos_build.py

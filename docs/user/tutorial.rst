@@ -11,7 +11,7 @@ Setting Up The Project
 
 Start with an empty directory. Make a `requirements.txt` file and put the following in it::
 
-    django==1.4.2
+    django==1.5
     
 Let's build a virtual python for our development::
 
