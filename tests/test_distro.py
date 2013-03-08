@@ -217,7 +217,16 @@ class DistroTestSuite(unittest.TestCase):
         self.assertTrue(run.call_args_list[1][0][0] == 'gem install fpm')
 
 
-    ## centos tests
+class DistroCentosTestSuite(unittest.TestCase):
+    """Versions test cases."""
+
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        for m in mocks_to_reset:
+            m.reset_mock()
+
     @patch('parcel.distro.run', run)
     def test_centos_update_packages(self):
         centos.update_packages()
@@ -260,3 +269,18 @@ class DistroTestSuite(unittest.TestCase):
         self.assertTrue(run.call_args_list[1][0][0] == 'gem install fpm')
         self.assertTrue(run.call_args_list[2][0][0] == 'yum install rpm-build -y')
         self.assertTrue(run.call_args_list[3][0][0] == 'yum install rsync -y')
+
+    # def test_check_fpm_not_present(self):
+    #     def called(command):
+    #         class retobj: pass
+    #         retval = retobj()
+            
+    #         if 'fpm' in command:
+    #             retval.return_code = 1
+    #         elif 'checkinstall' in command:
+    #             retval.return_code = 0
+        
+    #         return retval 
+
+    #     run.side_effect = called  # return these two objects from two calls to run
+    #     self.assertRaises(Exception, centos.check,())  # should be fpm exception
