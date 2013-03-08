@@ -7,6 +7,8 @@ from fabric.colors import green
 from . import versions
 from .cache import cache
 from .tools import rsync
+from .defaults import debian as debian_defaults
+from .defaults import centos as centos_defaults
 
 #
 # Used to represent the remote build distribution
@@ -33,15 +35,8 @@ class Distro(object):
         raise NotImplementedError
 
     def version(self,package):
-        """Look at the debian apt package system for a package with this name and return its version.
-        Return None if there is no such package.
-        """
-        with settings(warn_only=True):
-            vstring = run('apt-cache show %s 2>/dev/null | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%(package))
-            if vstring.return_code:
-                # error fetching package info. Assume there is no such named package. Return None
-                return None
-            return versions.Version(vstring)
+        """Look at the distro's packaging system for the package and return a version"""
+        raise NotImplementedError
 	
     def push_files(self,pathlist,dst):
         for path in pathlist:
@@ -87,8 +82,10 @@ class Distro(object):
         return base_dir, src_dir, build_dir
 
 
-
 class Debian(Distro):
+
+    def __init__(self):
+        self.defaults = debian_defaults
 
     def update_packages(self):
         with settings(user='root'):
@@ -97,6 +94,17 @@ class Debian(Distro):
     def build_deps(self, deps):
         with settings(user='root'):
             run("apt-get install -qq %s"%(' '.join(deps)))
+
+    def version(self,package):
+        """Look at the debian apt package system for a package with this name and return its version.
+        Return None if there is no such package.
+        """
+        with settings(warn_only=True):
+            vstring = run('apt-cache show %s 2>/dev/null | sed -nr "s/^Version: ([0-9]+)(-.+)?/\\1/p"'%(package))
+            if vstring.return_code:
+                # error fetching package info. Assume there is no such named package. Return None
+                return None
+            return versions.Version(vstring)
 
     def setup(self):
         """this method sets up a remote debian box for parcel package building.
@@ -169,6 +177,9 @@ class Ubuntu(Debian):
 
 class Centos(Distro):
 
+    def __init__(self):
+        self.defaults = centos_defaults
+
     def update_packages(self):
         with settings(user='root'):
             run("yum update -y")
@@ -176,6 +187,20 @@ class Centos(Distro):
     def build_deps(self, deps):
         with settings(user='root'):
             run("yum install -y %s"%(' '.join(deps)))
+
+    def version(self,package):
+        """Look at the debian apt package system for a package with this name and return its version.
+        Return None if there is no such package.
+        """
+        with settings(warn_only=True):
+            vstring = run('rpm -qi %s 2>/dev/null | sed -nr "s/^Version.+: ([0-9]+)(-.+)?/\\1/p"' % (package))
+            if vstring.return_code:
+                # error fetching package info. Assume there is no such named package. Return None
+                return None
+
+            # remove vender part of string
+            vstring = vstring.split()[0]
+            return versions.Version(vstring)
 
     def setup(self):
         """this method sets up a remote centos box for parcel package building.
@@ -185,6 +210,7 @@ class Centos(Distro):
             run("yum install rubygems -y")
             run("gem install fpm")
             run("yum install rpm-build -y")
+            run("yum install rsync -y")            
 
     def build_package(self, deployment=None):
         """

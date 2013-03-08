@@ -7,7 +7,6 @@ from fabric.colors import green
 from .. import versions
 from .. import distro
 from .. import tools
-from .. import defaults
 
 class Deployment(object):
     """The core :class:`Deployment <Deployment>` object. All Fabric tasks built with
@@ -30,7 +29,7 @@ class Deployment(object):
     preinst_lines = []
     postinst_lines = []
     
-    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian(), version=None):
+    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None, arch=distro.Debian(), version=None):
 
         #: The architecture of the build host. This should be a :class:`Distro <Distro>` object. 
         self.arch = arch
@@ -142,13 +141,14 @@ class Deployment(object):
         # add install and remove templates, use defaults if not supplied
         if templates:
             if not self.prerm:
-                self.write_prerm_template(defaults.prerm_template)
+                self.arch.defaults.prerm_template
+                self.write_prerm_template(self.arch.defaults.prerm_template)
             if not self.postrm:
-                self.write_postrm_template(defaults.postrm_template)
+                self.write_postrm_template(self.arch.defaults.postrm_template)
             if not self.preinst:
-                self.write_preinst_template(defaults.preinst_template)
+                self.write_preinst_template(self.arch.defaults.preinst_template)
             if not self.postinst:
-                self.write_postinst_template(defaults.postinst_template)
+                self.write_postinst_template(self.arch.defaults.postinst_template)
         
         with cd(self.base_path):
             self.deps_str = '-d ' + ' -d '.join(self.run_deps)
