@@ -155,27 +155,27 @@ class Deployment(object):
             self.dirs_str = '.'
             
             if self.prerm or self.postrm or self.preinst or self.postinst:
-                run("rm -rf debian && mkdir -p debian")
+                run("rm -rf installscripts && mkdir -p installscripts")
             
             # render pre/posts
             hooks = []
             if self.prerm:
                 prerm = self.prerm.format(self)
-                tools.write_contents_to_remote(prerm,'debian/prerm')
-                hooks.extend(['--before-remove', '../debian/prerm'])
+                tools.write_contents_to_remote(prerm,'installscripts/prerm')
+                hooks.extend(['--before-remove', '../installscripts/prerm'])
                 
             if self.postrm:
                 postrm = self.postrm.format(self)
-                tools.write_contents_to_remote(postrm,'debian/postrm')
-                hooks.extend(['--after-remove', '../debian/postrm'])
+                tools.write_contents_to_remote(postrm,'installscripts/postrm')
+                hooks.extend(['--after-remove', '../installscripts/postrm'])
             
             if self.preinst:
-                tools.write_contents_to_remote(self.preinst,'debian/preinst')
-                hooks.extend(['--before-install', '../debian/preinst'])
+                tools.write_contents_to_remote(self.preinst,'installscripts/preinst')
+                hooks.extend(['--before-install', '../installscripts/preinst'])
             
             if self.postinst:
-                tools.write_contents_to_remote(self.postinst,'debian/postinst')
-                hooks.extend(['--after-install', '../debian/postinst'])
+                tools.write_contents_to_remote(self.postinst,'installscripts/postinst')
+                hooks.extend(['--after-install', '../installscripts/postinst'])
             
             self.hooks_str = ' '.join(hooks)
             
