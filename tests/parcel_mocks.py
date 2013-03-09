@@ -33,12 +33,20 @@ def mock_local():
     def func(command):
 
         # used in test_deploy for test_build_deb
-        if command.startswith('fpm'):
+        if command.startswith('fpm') and 'rpm' in command:
+            tmpdir = tempfile.mkdtemp()
+            test_rpm = os.path.join(os.path.dirname(__file__),"data", "test.rpm")
+            rpm = os.path.join(tmpdir, 'testapp_0.1.1-1.noarch.rpm')
+            print os.listdir(tmpdir)
+            shutil.copy(test_rpm, rpm)
+            return 'Created rpm package {{"path":"{0}"}}'.format(rpm)
+        elif command.startswith('fpm') and 'deb' in command:
             tmpdir = tempfile.mkdtemp()
             test_deb = os.path.join(os.path.dirname(__file__),"data", "test.deb")
             deb = os.path.join(tmpdir, 'testapp_0.1.2_all.deb')
             shutil.copy(test_deb, deb)
             return 'Created deb package {{"path":"{0}"}}'.format(deb)
+
 
         # used in test_deploy to prevent actual pip installs
         if command.startswith('PIP_DOWNLOAD_CACHE'):
