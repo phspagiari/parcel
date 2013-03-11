@@ -292,7 +292,7 @@ class DistroCentosTestSuite(unittest.TestCase):
 
     @patch('parcel.distro.run', distro_run)
     def test_check_no_fpm(self):
-        fpm_out = _AttributeString("/usr/local/bin/fpm")
+        fpm_out = _AttributeString()
         fpm_out.return_code = 1
         distro_run.side_effect = [fpm_out]
 
