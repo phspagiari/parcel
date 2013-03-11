@@ -43,6 +43,13 @@ Code specific to the Ubuntu distribution can be found in the :class:`Ubuntu <Ubu
 .. autoclass:: Ubuntu
    :inherited-members:
 
+CentOS
+------
+
+Code specific to the CentOS distribution can be found in the :class:`Centos <Centos>` object.
+
+.. autoclass:: Centos
+   :inherited-members:
 
 Helpers
 -------
@@ -53,6 +60,7 @@ Various helper functions are available in parcel.helpers
 .. autofunction:: copy_ssh_key
 .. autofunction:: setup_debian
 .. autofunction:: setup_ubuntu
+.. autofunction:: setup_centos
 
 Probes
 ------

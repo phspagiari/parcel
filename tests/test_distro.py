@@ -3,7 +3,7 @@ import unittest2 as unittest
 
 from mock import patch, MagicMock
 
-from parcel.distro import debian, ubuntu, Distro
+from parcel.distro import debian, ubuntu, centos, Distro
 from parcel.deploy import Deployment
 
 from parcel_mocks import (run, _AttributeString, version_run, with_settings,
@@ -80,6 +80,7 @@ class DistroTestSuite(unittest.TestCase):
             # the classes build space should be in the path
             self.assertTrue(debian.space in command[0][0])
 
+    @patch('parcel.distro.run', run)
     def test_check_fpm_not_present(self):
         def called(command):
             class retobj: pass
@@ -94,7 +95,8 @@ class DistroTestSuite(unittest.TestCase):
             
         run.side_effect = called  # return these two objects from two calls to run
         self.assertRaises(Exception,debian.check,())  # should be fpm exception
-        
+
+    @patch('parcel.distro.run', run)        
     def test_check_fpm_present_checkinstall_not(self):
         def called(command):
             class retobj: pass
@@ -161,10 +163,18 @@ class DistroTestSuite(unittest.TestCase):
         with self.assertRaises(Exception):
             debian.check()
 
-    def test_setup_on_distro(self):
+    def test_unimplemented_methods_on_distro(self):
         d = Distro()
         with self.assertRaises(NotImplementedError):
             d.setup()
+        with self.assertRaises(NotImplementedError):
+            d.update_packages()
+        with self.assertRaises(NotImplementedError):
+            d.build_deps(['testdep'])
+        with self.assertRaises(NotImplementedError):
+            d.version('test_pkg')
+        with self.assertRaises(NotImplementedError):
+            d.check()
 
     def test_install_package_on_distro(self):
         d = Distro()
@@ -215,3 +225,76 @@ class DistroTestSuite(unittest.TestCase):
 
         self.assertTrue(run.call_args_list[0][0][0] == 'apt-get install rubygems -y')
         self.assertTrue(run.call_args_list[1][0][0] == 'gem install fpm')
+
+
+class DistroCentosTestSuite(unittest.TestCase):
+    """Versions test cases."""
+
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        for m in mocks_to_reset:
+            m.reset_mock()
+
+    @patch('parcel.distro.run', run)
+    def test_centos_update_packages(self):
+        centos.update_packages()
+        run.assert_called_once_with("yum update -y")
+
+    @patch('parcel.distro.run', run)
+    def test_centos_build_deps(self):
+        deps = ['test_dep0', 'test_dep1']
+        centos.build_deps(deps)
+        run.assert_called_once_with("yum install -y %s"%(' '.join(deps)))
+
+    @patch('parcel.distro.run', version_run)
+    def test_centos_version(self):
+        out = _AttributeString("0.5.1")
+        out.return_code = 0
+        version_run.return_value = out
+        ret = centos.version('test_pkg')
+        version_run.assert_called_once_with('rpm -qi %s 2>/dev/null | sed -nr "s/^Version.+: ([0-9]+)(-.+)?/\\1/p"'%('test_pkg'))
+        self.assertEqual(str(ret), "0.5.1")
+
+    @patch('parcel.distro.run', version_run)
+    def test_centos_version_not_found(self):
+        out = _AttributeString("")
+        out.return_code = 1
+        version_run.return_value = out
+        ret = centos.version('test_pkg')
+        version_run.assert_called_once_with('rpm -qi %s 2>/dev/null | sed -nr "s/^Version.+: ([0-9]+)(-.+)?/\\1/p"'%('test_pkg'))
+        self.assertEqual(ret, None)
+
+
+    @patch.multiple('parcel.distro', with_settings=with_settings, run=run, put=put, cd=distro_cd)
+    @patch('parcel.distro.cache.get', distro_cache)
+    @patch('parcel.distro.Centos.mkdir', distro_mkdir)    
+    def test_centos_setup(self):
+        distro_cache.return_value = '/a/test/path/file.gz'
+        distro_mkdir.side_effect = ['.parcel-build-temp', '.parcel-build-temp/src', '.parcel-build-temp/build']
+        centos.setup()
+
+        self.assertTrue(run.call_args_list[0][0][0] == 'yum install rubygems -y')
+        self.assertTrue(run.call_args_list[1][0][0] == 'gem install fpm')
+        self.assertTrue(run.call_args_list[2][0][0] == 'yum install rpm-build -y')
+        self.assertTrue(run.call_args_list[3][0][0] == 'yum install rsync -y')
+
+    @patch('parcel.distro.run', run)
+    def test_centos_check(self):
+        out = _AttributeString("/usr/local/bin/fpm")
+        out.return_code = 0
+        run.return_value = out
+        centos.check()
+
+        # check for fpm
+        self.assertTrue( 'which fpm' in run.call_args_list[0][0][0])
+
+    @patch('parcel.distro.run', distro_run)
+    def test_check_no_fpm(self):
+        fpm_out = _AttributeString()
+        fpm_out.return_code = 1
+        distro_run.side_effect = [fpm_out]
+
+        with self.assertRaises(Exception):
+            centos.check()

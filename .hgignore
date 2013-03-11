@@ -4,6 +4,8 @@ dist/*
 parcel.egg-info/*
 tests/data/cover*
 .coverage
+vptest/*
+vpdocs/*
 
 syntax: regexp
 

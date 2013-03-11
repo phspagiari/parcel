@@ -25,4 +25,4 @@ def build_for_uwsgi():
                      )
     d.prepare_app()
     d.add_supervisord_uwsgi_service(env.service_name, env.service_port)
-    d.build_deb()
+    d.build_package()

@@ -7,7 +7,6 @@ from fabric.colors import green
 from .. import versions
 from .. import distro
 from .. import tools
-from .. import defaults
 
 class Deployment(object):
     """The core :class:`Deployment <Deployment>` object. All Fabric tasks built with
@@ -30,7 +29,7 @@ class Deployment(object):
     preinst_lines = []
     postinst_lines = []
     
-    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None,arch=distro.Debian(), version=None):
+    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None, arch=distro.Debian(), version=None):
 
         #: The architecture of the build host. This should be a :class:`Distro <Distro>` object. 
         self.arch = arch
@@ -63,7 +62,7 @@ class Deployment(object):
         #: The directory that will be used as the base level directory.
         self.path = os.path.realpath(path)
 
-	    #: Location of files during build on build host. Default is user's home directory.
+        #: Location of files during build on build host. Default is user's home directory.
         #: If path is relative, it's relative to the remote user's home directory. If the path is absolute,
         #: it's used as is.
         self.base_path = os.path.join(remotehome,self.build_dir)
@@ -133,8 +132,8 @@ class Deployment(object):
     def add_postinst(self, lines):
         """Add lines to the postinst file"""
         self.postinst_lines.extend(lines)
-        
-    def build_deb(self, templates=True):
+
+    def build_package(self, templates=True):
         """Takes the whole app including the virtualenv, packages it using fpm and downloads it to the local host.
 	    The version of the package is the build number - which is just the latest package version in our Ubuntu repositories plus one.
 	    """
@@ -142,57 +141,46 @@ class Deployment(object):
         # add install and remove templates, use defaults if not supplied
         if templates:
             if not self.prerm:
-                self.write_prerm_template(defaults.prerm_template)
+                self.arch.defaults.prerm_template
+                self.write_prerm_template(self.arch.defaults.prerm_template)
             if not self.postrm:
-                self.write_postrm_template(defaults.postrm_template)
+                self.write_postrm_template(self.arch.defaults.postrm_template)
             if not self.preinst:
-                self.write_preinst_template(defaults.preinst_template)
+                self.write_preinst_template(self.arch.defaults.preinst_template)
             if not self.postinst:
-                self.write_postinst_template(defaults.postinst_template)
+                self.write_postinst_template(self.arch.defaults.postinst_template)
         
         with cd(self.base_path):
-            deps_str = '-d ' + ' -d '.join(self.run_deps)
-            dirs_str = '.'
+            self.deps_str = '-d ' + ' -d '.join(self.run_deps)
+            self.dirs_str = '.'
             
             if self.prerm or self.postrm or self.preinst or self.postinst:
-                run("rm -rf debian && mkdir -p debian")
+                run("rm -rf installscripts && mkdir -p installscripts")
             
             # render pre/posts
             hooks = []
             if self.prerm:
                 prerm = self.prerm.format(self)
-                tools.write_contents_to_remote(prerm,'debian/prerm')
-                hooks.extend(['--before-remove', '../debian/prerm'])
+                tools.write_contents_to_remote(prerm,'installscripts/prerm')
+                hooks.extend(['--before-remove', '../installscripts/prerm'])
                 
             if self.postrm:
                 postrm = self.postrm.format(self)
-                tools.write_contents_to_remote(postrm,'debian/postrm')
-                hooks.extend(['--after-remove', '../debian/postrm'])
+                tools.write_contents_to_remote(postrm,'installscripts/postrm')
+                hooks.extend(['--after-remove', '../installscripts/postrm'])
             
             if self.preinst:
-                tools.write_contents_to_remote(self.preinst,'debian/preinst')
-                hooks.extend(['--before-install', '../debian/preinst'])
+                tools.write_contents_to_remote(self.preinst,'installscripts/preinst')
+                hooks.extend(['--before-install', '../installscripts/preinst'])
             
             if self.postinst:
-                tools.write_contents_to_remote(self.postinst,'debian/postinst')
-                hooks.extend(['--after-install', '../debian/postinst'])
+                tools.write_contents_to_remote(self.postinst,'installscripts/postinst')
+                hooks.extend(['--after-install', '../installscripts/postinst'])
             
-            hooks_str = ' '.join(hooks)
+            self.hooks_str = ' '.join(hooks)
             
-        with cd(self.root_path):
-            rv = run(
-                'fpm -s dir -t deb -n {0.pkg_name} -v {0.version} '
-                '-a all -x "*.git" -x "*.bak" -x "*.orig" {1} '
-                '--description "Automated build. '
-                'No Version Control." '
-                '{2} {3}'
-                .format(self, hooks_str, deps_str, dirs_str)
-            )
+        self.arch.build_package(deployment=self)
 
-            filename = rv.split('"')[-2]
-            get(filename, './')
-            run("rm '%s'"%filename)
-            print green(os.path.basename(filename))
 
     def write_prerm_template(self, template):
         """Take a template prerm script and format it with appname and prerm_lines
