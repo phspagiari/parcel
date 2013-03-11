@@ -4,11 +4,14 @@ init:
 
 tests: test
 
-test:
-	nosetests ./tests/*.py
+test: vptest
+	vptest/bin/nosetests ./tests/*.py
+
+vtest: vptest
+	vptest/bin/nosetests -v ./tests/*.py
 
 coverage:
-	nosetests --with-coverage --cover-erase --cover-package=parcel --cover-html --cover-branches
+	vptest/bin/nosetests --with-coverage --cover-erase --cover-package=parcel --cover-html --cover-branches
 
 docs:
 	cd docs; make html
@@ -21,4 +24,8 @@ build:
 
 install: build
 	python setup.py install
+
+vptest:
+	virtualenv vptest
+	vptest/bin/pip install -r test-requirements.txt
 
