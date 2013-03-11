@@ -290,16 +290,11 @@ class DistroCentosTestSuite(unittest.TestCase):
         # check for fpm
         self.assertTrue( 'which fpm' in run.call_args_list[0][0][0])
 
-    # TODO can't get this one to work
-    # @patch('parcel.distro.run', run)
-    # def test_centos_check_fpm_not_present(self):
-    #     def called(command):
-    #         class retobj: pass
-    #         retval = retobj()
-            
-    #         if 'fpm' in command:
-    #             retval.return_code = 1
-    #         return retval 
+    @patch('parcel.distro.run', distro_run)
+    def test_check_no_fpm(self):
+        fpm_out = _AttributeString("/usr/local/bin/fpm")
+        fpm_out.return_code = 1
+        distro_run.side_effect = [fpm_out]
 
-    #     run.side_effect = called  # return the retobj from a call to run
-    #     self.assertRaises(Exception, centos.check,())  # should be fpm exception
+        with self.assertRaises(Exception):
+            centos.check()
