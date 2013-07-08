@@ -26,9 +26,13 @@ def rsync(sources,dest,rsync_ignore=None,color_files=True):
     command = []
     command.append('rsync')
     command.append('-av')
-    command.extend("'%s'"%s for s in sources)
-    command.append("'%s@%s:%s'"%(env.user,env.host,dest))
-                
+    # Support ports other than the default. Useful for when
+    # working with Vagrant.
+    if env.port:
+        command.append('-e "ssh -p {}"'.format(env.port))
+    command.extend("'%s'" % s for s in sources)
+    command.append("'%s@%s:%s'" % (env.user, env.host, dest))
+
     if rsync_ignore:
         if os.path.isfile(rsync_ignore):
             command.append('--exclude-from=%s'%rsync_ignore)

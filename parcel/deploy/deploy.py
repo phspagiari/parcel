@@ -15,20 +15,20 @@ class Deployment(object):
 
     virtual = "vp"
     build_dir = '.parcel'
-    
+
     # these are the full text versions of the scripts
     prerm = None
     postrm = None
     preinst = None
     postinst = None
-    
+
     # these are a list representation of commands to go into the scripts
     # if the control script templating is used
     prerm_lines = []
     postrm_lines = []
     preinst_lines = []
     postinst_lines = []
-    
+
     def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None, arch=distro.Debian(), version=None):
 
         #: The architecture of the build host. This should be a :class:`Distro <Distro>` object. 
@@ -218,7 +218,11 @@ class Deployment(object):
         """
         self.venv_path = os.path.join(self.build_path, self.virtual)
         run('virtualenv %s'%(self.venv_path))
-        if requirements and os.path.exists(requirements):
+        # The following will fail. See https://bitbucket.org/andrewmacgregor/
+        # parcel/issue/10/deployment-_add_venv-expects-requirements
+        # for further details.
+        # if requirements and os.path.exists(requirements):
+        if requirements:
             run('PIP_DOWNLOAD_CACHE="%s" %s install -r %s'%(
                 self.arch.pip_download_cache,
 	            os.path.join(self.venv_path, 'bin/pip'),
