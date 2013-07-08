@@ -1,1 +1,2 @@
 include AUTHORS.rst LICENSE README.txt
+recursive-include parcel *.py *.pyc

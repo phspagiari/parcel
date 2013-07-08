@@ -3,18 +3,14 @@ import os
 import sys
 
 import parcel
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
 
-packages = [ 'parcel' ]
 requires = [ 'fabric>=1.4.3', 'requests']
+
 
 setup(
     name='parcel',
@@ -24,8 +20,8 @@ setup(
     author='Crispin Wellington',
     author_email='retrogradeorbit@gmail.com',
     url='https://bitbucket.org/andrewmacgregor/parcel',
-    packages=packages,
     package_data={'': ['LICENSE']},
+    packages=find_packages(),
     include_package_data=True,
     install_requires=requires,
     license=open('LICENSE').read(),
