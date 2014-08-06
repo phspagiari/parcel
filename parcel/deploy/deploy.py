@@ -29,7 +29,7 @@ class Deployment(object):
     preinst_lines = []
     postinst_lines = []
 
-    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None, arch=distro.Debian(), version=None):
+    def __init__(self, app_name, build_deps=[], run_deps=[], path=".", base=None, arch=distro.Debian(), version=None, versioned_dir=True):
 
         #: The architecture of the build host. This should be a :class:`Distro <Distro>` object. 
         self.arch = arch
@@ -71,7 +71,10 @@ class Deployment(object):
         self.root_path = os.path.join(self.base_path,"root")                    # where the final root fs is located
         
         # the path the app will be installed into
-        self.app_path = os.path.join(base,'%s-%s'%(self.pkg_name,self.version))
+        if self.versioned_dir:
+            self.app_path = os.path.join(base,'%s-%s'%(self.pkg_name,self.version))
+        else:
+            self.app_path = os.path.join(base,'%s'%(self.pkg_name))
         
         # the build path
         self.build_path = os.path.join(self.root_path, self.app_path[1:])                # cut the first / off app_path
