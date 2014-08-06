@@ -13,7 +13,7 @@ class Deployment(object):
     Parcel will probably use this an instance of this class.
     """
 
-    virtual = "vp"
+    virtual = ".venv"
     build_dir = '.parcel'
 
     # these are the full text versions of the scripts
@@ -57,7 +57,6 @@ class Deployment(object):
 
         #: A list of packages that need to be installed to build the software.
         self.build_deps = build_deps
-        self.pkg_name = app_name.lower()
 
         #: The directory that will be used as the base level directory.
         self.path = os.path.realpath(path)
@@ -70,7 +69,7 @@ class Deployment(object):
         #: it's used as is.
         self.base_path = os.path.join(remotehome,self.build_dir)
 
-        self.pkg_name = app_name.lower()
+        self.pkg_name = "%s_%s" % (app_name.lower(), self.version)
         self.root_path = os.path.join(self.base_path,"root")                    # where the final root fs is located
         
         # the path the app will be installed into
@@ -82,8 +81,9 @@ class Deployment(object):
         # the build path
         self.build_path = os.path.join(self.root_path, self.app_path[1:])                # cut the first / off app_path
 
-        print "ROOT_PATH", self.root_path
-        print "BASE_PATH",self.base_path
+        print "PKG NAME", self.pkg_name
+        print "ROOT PATH", self.root_path
+        print "BASE PATH",self.base_path
         print "APP PATH",self.app_path
         print "BUILD PATH",self.build_path
 
