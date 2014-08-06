@@ -61,6 +61,9 @@ class Deployment(object):
 
         #: The directory that will be used as the base level directory.
         self.path = os.path.realpath(path)
+        
+        #: Flag to create or not the resulted directory of package with version
+        self.versioned_dir = versioned_dir
 
         #: Location of files during build on build host. Default is user's home directory.
         #: If path is relative, it's relative to the remote user's home directory. If the path is absolute,
